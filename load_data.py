@@ -54,7 +54,7 @@ def analysis():
 				tag_features[i][int(fea_idx)-1] = float(fea_val)
 
 
-	return [image_tags_cross_similarity, image_features, tag_features]
+	return [image_tags_cross_similarity, np.transpose(image_features), np.transpose(tag_features)]
 				
 
 if __name__ == '__main__':
