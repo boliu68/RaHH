@@ -1,5 +1,6 @@
 import load_data
 import numpy as np
+from cvh import cvh
 #Relation-aware Heterogeneous Hashing(RaHH)
 #Puesdo-Code
 #Author: Bo Liu
@@ -21,31 +22,48 @@ def get_attr(image_fea, tag_fea, similarity):
 
     return [K, N, dim]
 
+def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q):
+    
+    print 1
+
+def update_S(fea, hash):
+    
+    S_0 = np.dot(hash, np.transpost(fea))
+    S_1 = np.dot(hash, np.ones([np.shape(fea,1),1]))
+    S_2 = np.subtract(np.dot(hash, np.transpose(hash)),np.multiply(np.shape(fea,1),np.eye(np.shape(hash,0))))
+
+    return [S_0, S_1, S_2]
+
 def initialize(image_fea, tag_fea, similarity):
-    
-    
+    #Initialize the hash code for image and tag using CVH
+    #Initialize the inter domain mapping matrix W as I 
+    #Initialize the matrix S
     
     [K, N, dim] = get_attr(image_fea, tag_fea, similarity)
-    hash = [16,16]#the hash code length
     
-    H_0 = np.zeros([hash[0], N[0]])
-    H_1 = np.zeros([hash[1], N[1]])
+    #the hash code length
+    hash_bit = [16,16]
     
+    #Hash code rp*mp
+    [H_img, H_tag] = cvh(similarity, image_fea, tag_fea) 
+    #Heterogeneous mapping by image_hash'*W = tag_hash 
     W = np.eye(hash[0],hash[1])
     
-    S = []
+    S_img = updast_S(image_fea, H_img)
+    S_tag = update_S(image_tag, H_tag)
+    S = {'img': S_img, 'tag': S_tag}
     
-    return [H_0, H_1, W]
+    return [H_img, H_tag, W, S]
 
 def RaHH():
     #R is the similarity to keep the consistent with origin paper
-    [R, image_fea, tag_fea] = load_data.analysis()
+    [R_pq, image_fea, tag_fea] = load_data.analysis()
     #image_fea d_p * m_p
     #tag_fea d_q* m_q
     #similarty : m_p * m_q
     
-    [K, N, dim] = get_attr(image_fea, tag_fea, R)
-    [H_0, H_1, W] = initialize(image_fea, tag_fea, R)
+    [K, N, dim] = get_attr(image_fea, tag_fea, R_pq)
+    [H_img, H_tag, W, S] = initialize(image_fea, tag_fea, R_pq)
     
     
     
