@@ -1,5 +1,7 @@
 import numpy as np
+import scipy.linalg as scialg
 import load_data
+import HamDist
 
 #Reference : Kumar, S., & Udupa, R. (2011). 
 #Learning hash functions for cross-view similarity search. 
@@ -19,10 +21,9 @@ def domain2view(fea_1,fea_2,similarity):
     threshold = np.median(similarity)
     indicator = similarity > threshold #For choosing the pair that will be used
 
-    dim= [np.size(fea_1,1), np.size(fea_2,1)]
+    dim= [np.size(fea_1,0), np.size(fea_2,0)]
     
     num_x = np.sum(indicator)
-    
     
     X_1 = np.zeros([num_x,dim[0]])
     X_2 = np.zeros([num_x,dim[1]])
@@ -34,8 +35,8 @@ def domain2view(fea_1,fea_2,similarity):
             
             if similarity[i, j] > threshold:
                 
-                X_1[count] = fea_1[i]
-                X_2[count] = fea_2[j]
+                X_1[count] = fea_1[:,i]
+                X_2[count] = fea_2[:,j]
                 count = count + 1
     
     return [X_1, X_2]
@@ -45,42 +46,80 @@ def domain2view(fea_1,fea_2,similarity):
 def hash_function(X_1, X_2):
     #Based two view X_1, and X_2
     #return the hash function each view A_1 and A_2
+    
+    eye_lambda = 1e-4
+    [A1, A2] = train_CCA(X_1, X_2, eye_lambda)
+    
+    return [A1, A2]
+
+
+def train_CCA(X_1, X_2, eye_lambda):
+    #The CCA to train the obtian the hash function
+    
     X_1t = np.transpose(X_1)
     X_2t = np.transpose(X_2)
     
-    B = np.dot(np.linalg.pinv((np.dot(X_1t,X_1))),np.dot(X_1t,X_2))
-    C = np.dot(np.linalg.pinv(np.dot(X_2t,X_2)),np.dot(X_2t,X_1))
-    
-    B = np.dot(B,C)
-    
-    [eig_val, A_1] = np.linalg.eig(B)
-    
-    print eig_val
-    
-    A_2 = np.dot(np.dot(C, A_1),np.linalg.pinv((np.sqrt(eig_val))))
-    
-    return [A_1, A_2]
+    Cxx = np.dot(X_1t, X_1)
+    Cyy = np.dot(X_2t, X_2)
+    Cxy = np.dot(X_1t, X_2)
+    Cyx = np.dot(X_2t, X_1)
+     
+    #avoid Sigularity
+    Cxx = np.add(Cxx, np.multiply(eye_lambda,np.eye(np.shape(Cxx)[0]))) 
+    Cyy = np.add(Cyy, np.multiply(eye_lambda,np.eye(np.shape(Cyy)[0])))
 
-def cvh():
+    A = np.dot(Cxy,np.dot(np.linalg.pinv(Cyy),Cyx))
+    B = Cxx
+    
+    [eigval, eigvec] = scialg.eig(A,B)
+    
+    A1 = np.real(eigvec)
+    eigval = np.diag(np.real(eigval))
+    
+    A2 = np.dot(np.dot(np.dot(np.linalg.pinv(Cyy),np.transpose(Cxy)), A1), np.linalg.inv(eigval))
+    
+    return [A1, A2]
+    
 
-    [image_tags_cross_similarity, image_features, tag_features] = load_data.analysis()
+def cvh(image_tags_cross_similarity, image_features, tag_features, bit):
+
+    #[image_tags_cross_similarity, image_features, tag_features] = load_data.analysis()
+    #Return rp * mp
     
     [X_1, X_2] = domain2view(image_features, tag_features, image_tags_cross_similarity)
     
     [A_1, A_2] = hash_function(X_1, X_2)
     
-    hash_dim = 100
+    #print np.shape(A_1[:][0:bit[0]])
+    #print  np.shape(A_1[0:bit[0]][:])
     
-    hash_1 = np.multiply(image_features, A_1)
-    hash_2 = np.multiply(tag_features, A_2)
+    #print np.shape(image_features)
+    #print np.shape(A_1)
+    
+    hash_1 = np.dot(np.transpose(A_1[:,0:bit[0]]),image_features)
+    hash_2 = np.dot(np.transpose(A_2[:,0:bit[1]]),tag_features)
+    
+    hash_1 = np.sign(hash_1)
+    hash_2 = np.sign(hash_2)
+    
+    #hash function
+    #hash_1 = np.transpose(np.sign(hash_1,))
+    #hash_2 = np.transpose(np.sign(hash_2,))
+    #print np.shape(hash_1)
     
     return [hash_1, hash_2]
     
 if __name__ == '__main__':
     
-    [hash_1, hash_2 ] = cvh()
+    [image_tags_cross_similarity, image_features, tag_features] = load_data.analysis()
     
+    bit = [32,32]
+    [hash_1, hash_2 ] = cvh(image_tags_cross_similarity, image_features, tag_features,bit)
+    
+    print np.shape(hash_1)
+    print np.shape(hash_2)
     print hash_1
-    print hash_2
-
     
+    for i in range(np.shape(tag_features)[1]):
+		print i,'  ', image_tags_cross_similarity[0][i],'Distance:', HamDist.HamDist(hash_1[:,0],hash_2[:,i])
+

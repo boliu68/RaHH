@@ -1,8 +1,11 @@
 #To calculate the Hamming Distance given two string
-import numpy
+#import numpy as np
+import scipy.spatial as sp
 
-def HamDis(v1, v2):
+def HamDist(v1, v2):
     
-    distance = np.sum(v1 ^ v2)
+    return sp.distance.hamming(v1,v2)
+
+if __name__ == '__main__':
     
-    return distance
+    print sp.distance.hamming([1,1,1],[1,-1,1])
