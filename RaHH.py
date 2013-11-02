@@ -2,6 +2,7 @@ import load_data
 import numpy as np
 from cvh import cvh
 from loss_func import *
+from Test import *
 #Relation-aware Heterogeneous Hashing(RaHH)
 #Puesdo-Code
 #Author: Bo Liu
@@ -30,12 +31,12 @@ def initialize(image_fea, tag_fea, similarity):
     #Initialize the matrix S
     
     [K, N, dim] = get_attr(image_fea, tag_fea, similarity)
-    
+
     #the hash code length
     hash_bit = [16,16]
     
     #Hash code rp*mp
-    [H_img, H_tag] = cvh(similarity, image_fea, tag_fea,hash_bit) 
+    [H_img, H_tag, A_img, A_tag] = cvh(similarity, image_fea, tag_fea,hash_bit) 
     #Heterogeneous mapping by image_hash'*W = tag_hash 
     W = np.eye(hash_bit[0],hash_bit[1])
     
@@ -46,19 +47,28 @@ def initialize(image_fea, tag_fea, similarity):
     R_p = np.eye(np.shape(image_fea)[1])
     R_q = np.eye(np.shape(tag_fea)[1])
     
-    return [H_img, H_tag, W, S, R_p, R_q]
+    return [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag]
 
 def RaHH():
     #R is the similarity to keep the consistent with origin paper
-    [R_pq, image_fea, tag_fea] = load_data.analysis()
+    [R_pq, img_fea, tag_fea, QA_fea, GD] = load_data.analysis()
     #image_fea d_p * m_p
     #tag_fea d_q* m_q
     #similarty : m_p * m_q
+	#QA_fea = d_p * m_p
+	#GD = #img * #QA
+    print 'Loading Data finish' 
+    [K, N, dim] = get_attr(img_fea, tag_fea, R_pq)
+    print 'CVH finish'
     
-    [K, N, dim] = get_attr(image_fea, tag_fea, R_pq)
-    [H_img, H_tag, W, S, R_p, R_q] = initialize(image_fea, tag_fea, R_pq)
+    #bits = [8,16,32,64]
+    [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(img_fea, tag_fea, R_pq)	
     
-    train(image_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q)
+    #for bit in bits:
+        #test(img_fea, QA_fea, A_img, A_tag, bit, np.eye(bit,bit), GD)
+
+    print 'begin RaHH train'
+    train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q)
     
     
 
