@@ -4,9 +4,9 @@ import scipy.linalg as lag
 import math
 
 
-def loss_func(hash_1, hash_2, R_pq, W, S, trade_off, beta, gamma1, gamma2, gamma3):
+def loss_func(hash_1, hash_2, R_pq, W, S, beta, gamma1, gamma2, gamma3):
     #concerned about the fact that the homogeneous similarly matrix is identical matrix
-    #the homogeneous part of loss function is not concerned
+    #the homogeneous part of loss function is not conerned
     
     hash = [hash_1, hash_2]
     mp = np.shape(hash_1)[1]
@@ -20,33 +20,27 @@ def loss_func(hash_1, hash_2, R_pq, W, S, trade_off, beta, gamma1, gamma2, gamma
     for p in range(2):
         
         q = 1 - p
-        
+            
         rp = np.shape(hash[p])[0]
         J.append(0)
-        
-        print np.shape(R_pq)
+       
+       #Homogeneous loss function is considered as zero caused identical matrix is utlized to represent the homogeneous similarity
         
         for k in range(rp):
             for i in range(mp):
                 for j in range(mq):
-                   #print -R_pq[i,j]*hash[q][k,j]
-                   #print np.dot(np.transpose(W[:,k]),hash[p][:,i])
-                   #print 'k', k, 'i', i, 'j', j
-                   
-                   #hash[q][k,j] * np.dot(np.transpose(W[:,k]),hash[p][:,i])
-                   l = math.log(1+math.exp(-R_pq[i,j]*hash[q][k,j] * np.dot(np.transpose(W[:,k]),hash[p][:,i])))
+                   #heterogeneous part of loss function
+                   l = math.log(1 + math.exp(-R_pq[i,j] * hash[q][k,j] * np.dot(np.transpose(W[:,k]),hash[p][:,i])))
                    J[p] = J[p] + l
 
-            J[p] = J[p] + trade_off * math.pow((sp.distance.norm(W[:,k], 2)),2)
+            J[p] = J[p] + beta * math.pow((sp.distance.norm(W[:,k], 2)),2)
         
-        #print np.eye(np.shape(hash[p])[0],np.shape(hash[p])[1])
-        #print np.eye(np.shape(hash[p]))
-        
+
         theta1 = theta1 + math.pow(lag.norm((hash[p] * hash[p] - np.eye(np.shape(hash[p])[0],np.shape(hash[p])[1])), 'fro'),2)
         theta2 = theta2 + math.pow(lag.norm(S[p][1],'fro'),2)
         theta3 = theta3 + math.pow(lag.norm(S[p][2],'fro'),2)
         
-    loss = sum(J) + theta1 + theta2 + theta3
+    loss = sum(J) + gamma1 * theta1 + gamma2 * theta2 + gamma3 * theta3
     
     return loss
 
@@ -54,15 +48,15 @@ def loss_func(hash_1, hash_2, R_pq, W, S, trade_off, beta, gamma1, gamma2, gamma
 def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q):
     
     #def loss_func(hash_1, hash_2, R_pq, W, trade_off):
-    trade_off = 0.1
     old_loss = 0
-    beta = 1
-    gamma1 = 0.1
-    gamma2 = 0.1
-    gamma3 = 0.1
+    trade_off = 1
+    beta = 100
+    gamma1 = 10
+    gamma2 = 3e-3
+    gamma3 = 3
     lambda_w = 1e-3
     lambda_h = 1e-3
-    new_loss = loss_func(H_img, H_tag, R_pq, W, S, trade_off, beta, gamma1, gamma2, gamma3)
+    new_loss = loss_func(H_img, H_tag, R_pq, W, S, beta, gamma1, gamma2, gamma3)
     
     converge_threshold = 1e2
     #print a
@@ -72,12 +66,18 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q):
     
     W = np.transpose(W)
     R_pq = np.transpose(R_pq)
-    print R_pq
+    #print R_pq
     
     print '---------Training---------------'
     
-    while (old_loss - new_loss < converge_threshold):
+    iteration = 0
+
+    while (old_loss - new_loss > converge_threshold):
         
+        iteration += 1
+        
+        print iteration,  'times iteration'
+
         old_loss = new_loss
         print old_loss
         #update the hash code
@@ -96,8 +96,10 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q):
             W = update_w(H, R_pq, W, p, lambda_w)
             
     
-        new_loss = loss_func(H[0], H[1], R_pq, W, S, trade_off, beta, gamma1, gamma2, gamma3)
+        new_loss = loss_func(H[0], H[1], R_pq, W, S,  beta, gamma1, gamma2, gamma3)
     
+    print 'old:', old_loss, 'new', new_loss
+
     H_img = np.sign(H[0])
     H_tag = np.sign(H[1])
     
@@ -169,11 +171,11 @@ def update_w(H, R_pq, W, p, lambda_w):
                 
                 gd = gd + (-R_pq[i,j] * H[q][k,j] * H[p][:, i]) / (1 + math.exp(R_pq[i,j] * H[q][k,j] * np.dot(W[:,k], H[p][:,i])))
                 
-        gd_vec = gd - lambda_w * W[:,k]
+        gd_vec = gd -  W[:,k]
         
-        print gd_vec
+        #print gd_vec
         
-        W[:,k] = W[:,k] - gd_vec
+        W[:,k] = W[:,k] -lambda_w* gd_vec
         
     return W
         

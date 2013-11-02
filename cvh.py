@@ -107,7 +107,13 @@ def cvh(image_tags_cross_similarity, image_features, tag_features, bit):
     #hash_2 = np.transpose(np.sign(hash_2,))
     #print np.shape(hash_1)
     
-    return [hash_1, hash_2]
+    #for i in range(hash_1.shape[1]):
+        #for j in range(hash_2.shape[1]):
+            #print 'disttance', HamDist.HamDist(hash_1[:,i],hash_2[:,j])
+            #print 'data1', hash_1
+            #print 'data2', hash_2
+
+    return [hash_1, hash_2, A_1.transpose(), A_2.transpose()]
     
 if __name__ == '__main__':
     
