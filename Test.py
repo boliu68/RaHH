@@ -9,12 +9,8 @@
 from numpy import *
 from HamDist import *
 
-def test(img_fea, qa_fea, A_img, A_qa,bit, Rpq, groundtruth):
+def test(img_hash, qa_hash ,bit, groundtruth):
 
-    img_hash = sign(dot(A_img[0:bit,:], img_fea))
-    img_hash = sign(dot(Rpq, img_hash))
-    qa_hash = sign(dot(A_qa[0:bit,:], qa_fea))
-    
     dist_threshold = [.2,.4,.6,.8]
     GP = arange(4)
     GR = arange(4)
