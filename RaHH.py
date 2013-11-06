@@ -51,18 +51,30 @@ def initialize(image_fea, tag_fea, similarity):
 
 def RaHH():
     #R is the similarity to keep the consistent with origin paper
-    [R_pq, img_fea, tag_fea, QA_fea, GD] = load_data.analysis()
+
+    Tr_sim_path = 'Data/Train/similarity.txt'
+    Tr_img_path = 'Data/Train/images_features.txt'
+    Tr_tag_path = 'Data/Train/tags_features.txt'
+    Tst_sim_path = 'Data/Test/similarity.txt'
+    Tst_img_path = 'Data/Test/images_features.txt'
+    Tst_qa_path = 'Data/Test/QA_features.txt'
+    gd_path = 'Data/Test/groundtruth.txt'
+
+    [Tr_sim, Tr_img, Tr_tag, Tst_sim, Tst_img, Tst_qa, gd] = load_data.analysis(Tr_sim_path, Tr_img_path, Tr_tag_path, Tst_sim_path, Tst_img_path, Tst_qa_path, gd_path)
     #image_fea d_p * m_p
     #tag_fea d_q* m_q
     #similarty : m_p * m_q
 	#QA_fea = d_p * m_p
 	#GD = #img * #QA
-    print 'Loading Data finish' 
-    [K, N, dim] = get_attr(img_fea, tag_fea, R_pq)
+    print 'Loading Data finish'
+    print 'Train sim:', Tr_sim.shape, 'Train Img:', Tr_img.shape, 'Tr_tag:', Tr_tag.shape
+    print 'Test sim:', Tst_sim.shape, 'Tst Img:', Tst_img.shape, 'Tst_qa:', Tst_qa.shape, 'GD:', gd.shape
+
+    [K, N, dim] = get_attr(Tr_img, Tr_tag, Tr_sim)
     print 'CVH finish'
     
     #bits = [8,16,32,64]
-    [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(img_fea, tag_fea, R_pq)	
+    [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim)	
     
     #for bit in bits:
         #test(img_fea, QA_fea, A_img, A_tag, bit, np.eye(bit,bit), GD)
