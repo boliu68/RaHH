@@ -33,7 +33,7 @@ def initialize(image_fea, tag_fea, similarity):
     [K, N, dim] = get_attr(image_fea, tag_fea, similarity)
 
     #the hash code length
-    hash_bit = [8,8]
+    hash_bit = [16, 16]
     
     #Hash code rp*mp
     [H_img, H_tag, A_img, A_tag] = cvh(similarity, image_fea, tag_fea,hash_bit) 
@@ -51,9 +51,9 @@ def initialize(image_fea, tag_fea, similarity):
 def RaHH():
     #R is the similarity to keep the consistent with origin paper
 
-    Tr_sim_path = 'Data/Train/similarity.txt'
-    Tr_img_path = 'Data/Train/images_features.txt'
-    Tr_tag_path = 'Data/Train/tags_features.txt'
+    Tr_sim_path = 'Data/Test/similarityTra.txt'
+    Tr_img_path = 'Data/Test/images_features.txt'
+    Tr_tag_path = 'Data/Test/tags_features.txt'
     Tst_sim_path = 'Data/Test/similarity.txt'
     Tst_img_path = 'Data/Test/images_features.txt'
     Tst_qa_path = 'Data/Test/QA_features.txt'
@@ -63,8 +63,8 @@ def RaHH():
     #image_fea d_p * m_p
     #tag_fea d_q* m_q
     #similarty : m_p * m_q
-	#QA_fea = d_p * m_p
-	#GD = #img * #QA
+    #QA_fea = d_p * m_p
+    #GD = #img * #QA
     print 'Loading Data finish'
     print 'Train sim:', Tr_sim.shape, 'Train Img:', Tr_img.shape, 'Tr_tag:', Tr_tag.shape
     print 'Test sim:', Tst_sim.shape, 'Tst Img:', Tst_img.shape, 'Tst_qa:', Tst_qa.shape, 'GD:', gd.shape
@@ -86,4 +86,3 @@ def RaHH():
 if __name__ == '__main__':
     
     RaHH()
-    

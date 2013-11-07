@@ -3,7 +3,6 @@ from scipy.spatial import *
 import scipy.linalg as lag
 import math
 
-
 def loss_func(hash_1, hash_2, R_pq, W, S, beta, gamma1, gamma2, gamma3):
     #concerned about the fact that the homogeneous similarly matrix is identical matrix
     #the homogeneous part of loss function is not conerned
@@ -19,7 +18,7 @@ def loss_func(hash_1, hash_2, R_pq, W, S, beta, gamma1, gamma2, gamma3):
     
     for p in range(2):
 
-        print p, 'domain begin'
+        #print p, 'domain begin'
 
         q = 1 - p
             
@@ -40,9 +39,15 @@ def loss_func(hash_1, hash_2, R_pq, W, S, beta, gamma1, gamma2, gamma3):
             hashp_mapped_k = tile(hash_p_maped[k, :], (R_pq.shape[0], 1))
 
             J_tmp = (R_pq * hashq_k) * hashp_mapped_k
-            J_tmp = log(1 + exp(-J_tmp))
 
-            J[p] += sum(sum(J_tmp))
+            print '-----------------'
+            print R_pq.max()
+            print hashq_k.max()
+            print hashp_mapped_k.max()
+            print W.max()
+            print J_tmp
+
+            J[p] += sum(log(1 + exp(-J_tmp)))
 
             #for i in range(mp):
                 #for j in range(mq):
@@ -52,14 +57,14 @@ def loss_func(hash_1, hash_2, R_pq, W, S, beta, gamma1, gamma2, gamma3):
 
                     #print k, i, j
 
-            J[p] = J[p] + beta * math.pow((distance.norm(W[:,k], 2)),2)
+            J[p] += beta * math.pow((distance.norm(W[:, k], 2)), 2)
 
-        print 'finish one domain'
+        #print 'finish one domain'
 
         #regularization part of loss function
-        theta1 = theta1 + math.pow(lag.norm((hash[p] * hash[p] - eye(shape(hash[p])[0],shape(hash[p])[1])), 'fro'),2)
-        theta2 = theta2 + math.pow(lag.norm(S[p][1],'fro'),2)
-        theta3 = theta3 + math.pow(lag.norm(S[p][2],'fro'),2)
+        theta1 += math.pow(lag.norm((hash[p] * hash[p] - eye(shape(hash[p])[0],shape(hash[p])[1])), 'fro'), 2)
+        theta2 += math.pow(lag.norm(S[p][1], 'fro'), 2)
+        theta3 += math.pow(lag.norm(S[p][2], 'fro'), 2)
         
     loss = sum(J) + gamma1 * theta1 + gamma2 * theta2 + gamma3 * theta3
     
@@ -82,7 +87,7 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q):
     new_loss = loss_func(H_img, H_tag, R_pq, W, S, beta, gamma1, gamma2, gamma3)
     old_loss = new_loss + 200  #just for start
 
-    converge_threshold = 1e2
+    converge_threshold = 100
     
     fea = [img_fea, tag_fea]
     H = [H_img, H_tag]
@@ -95,10 +100,11 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q):
     
     iteration = 0
 
-    while (old_loss - new_loss > converge_threshold):
+    while math.fabs(old_loss - new_loss) > converge_threshold:
         
         iteration += 1
-        
+
+        print '-------------------------------'
         print iteration,  'times iteration'
 
         old_loss = new_loss
@@ -106,21 +112,20 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q):
 
         #update the hash code
         #and update the statistics S
-        for p  in range(2):
+        for p in range(2):
 
             q = 1 - p
             W = W.transpose()
             R_pq = R_pq.transpose()
-            
-            W = update_w(H, R_pq, W, p, lambda_w, lambda_reg)
-            print 'Updating H'
+
+            #print 'Updating H'
             [H, S] = update_h(fea, H, W, S, R_pq, p, lambda_h)
             
-            print 'updating W'
+            #print 'updating W'
             #update the mapping function w
             W = update_w(H, R_pq, W, p, lambda_w, lambda_reg)
-            
-    
+
+
         new_loss = loss_func(H[0], H[1], R_pq.transpose(), W.transpose(), S,  beta, gamma1, gamma2, gamma3)
     
     print 'old:', old_loss, 'new', new_loss
@@ -148,7 +153,6 @@ def update_h(fea, H, W, S, R_pq, p, lambda_h):
     Gradient = zeros([rp, mp])
     
     gd_1 = 4*((H[p] * H[p] - eye(rp,mp))*H[p])
-    
     gd_2 = multiply(2, S[p][1]) #rp \times 1
     gd_2 = tile(gd_2, (1,mp))
     gd_3 = multiply(4, dot(S[p][2], H[p]))
@@ -159,36 +163,50 @@ def update_h(fea, H, W, S, R_pq, p, lambda_h):
     Hp_map = dot(W, H[q]) #hash code of p acquired from mapping Hq
 
     for k in range(rp):
-        print k
+        print 'Update H:', k
+
+        #gd_1 = 4*((H[p] * H[p] - eye(rp,mp))*H[p])
+
+        #gd_2 = multiply(2, S[p][1]) #rp \times 1
+        #gd_2 = tile(gd_2, (1,mp))
+        #gd_3 = multiply(4, dot(S[p][2], H[p]))
+        #Gradient = (gd_1 + gd_2 + gd_3)
+
         for i in range(mp):
-            
+
             gd = 0
-            
+
             #for j in range(mq):
                 
                 #for g in range(rq):
                     
                     #iteration for q's bit g
-                    #gd = gd + (-R_pq[i,j] * H[q][g,j] * W[k,g]) / (1 + math.exp( R_pq[i,j] * H[q][g,j] * Hq_map[g, i]))#dot(transpose(W[:,g]), H[p][:, i])))
+                    #gd1 = gd + (-R_pq[i,j] * H[q][g,j] * W[k,g]) / (1 + math.exp( R_pq[i,j] * H[q][g,j] * Hq_map[g, i]))#dot(transpose(W[:,g]), H[p][:, i])))
 
-                #gd = gd + (-R_pq[i,j] * Hp_map[k,j]) / (1 + math.exp(R_pq[i,j] * H[p][k, i] * Hp_map[k,j]))
+                    #gd = gd1 + (-R_pq[i,j] * Hp_map[k,j]) / (1 + math.exp(R_pq[i,j] * H[p][k, i] * Hp_map[k,j]))
             #Gradient[k, i] = Gradient[k,i] + gd
-        
-            R_pqij = tile(R_pq[i,:], (rq, 1))
+
+            #print 'Origin Method', gd1, gd
+
+            R_pqij = tile(R_pq[i, :], (rq, 1))
             H_qgj = H[q]
             W_pqkg = tile(W[k, :].transpose(), (mq, 1)).transpose()
-            Wg_Hip = tile(Hq_map[:,i], (mq, 1)).transpose()
+            Wg_Hip = tile(Hq_map[:, i], (mq, 1)).transpose()
 
-            gd += sum(sum((R_pqij * H_qgj * W_pqkg) / (1 + exp(R_pqij * H_qgj * Wg_Hip))))
-            gd += sum(( - R_pq[i,:] * Hp_map[k,:]) / (1 + exp(R_pq[i, :] * Hp_map[k, :] * H[p][k,i]))) 
-            
-            Gradient[k, i] = Gradient[k,i] + gd
+            gd += sum((-R_pqij * H_qgj * W_pqkg) / (1 + exp(R_pqij * H_qgj * Wg_Hip)))
 
-        H[p][k,:] = H[p][k,:] - lambda_h * Gradient[k,:]
+            gd += sum((-R_pq[i, :] * Hp_map[k, :]) / (1 + exp(R_pq[i, :] * Hp_map[k, :] * H[p][k, i])))
+
+            #print 'Current Method', gd1, gd
+            #print 'Current Method',
+
+            Gradient[k, i] += gd
+
+        H[p][k, :] = H[p][k, :] - lambda_h * Gradient[k, :]
         
         S[p] = update_S(fea[p], H[p])
     
-    print 'graident finished'
+    #print 'graident finished'
 
     return [H, S]
 
@@ -206,7 +224,8 @@ def update_w(H, R_pq, W, p, lambda_reg, lambda_w):
     Hq_maped = dot(W.transpose(), H[p])
 
     for k in range(rq):
-        
+        print 'Update W,', k
+
         gd = zeros([1, rp])
         #print 'gdshape1:', gd.shape
         
@@ -220,19 +239,20 @@ def update_w(H, R_pq, W, p, lambda_reg, lambda_w):
             #gd = gd + (scale * H[p][:,i])
 
         #mp \times 1
-        Rpq_Hkj = R_pq * tile(H[q][k,:], (mp, 1))
+        Rpq_Hkj = R_pq * tile(H[q][k, :], (mp, 1))
+        print 'Rpq_Hkj', Rpq_Hkj.shape
         
-        gd_i = (-Rpq_Hkj) / (1 + exp(-Rpq_Hkj * tile(Hq_maped[k, :], (mq, 1)).transpose()))
+        gd_i = (-Rpq_Hkj) / (1 + exp(Rpq_Hkj * tile(Hq_maped[k, :], (mq, 1)).transpose()))
         gd_i = sum(gd_i, 1)
         #print 'gd_i shape', gd_i.shape
 
         gd = dot(H[p], gd_i.transpose())
-        print 'gd shape:', gd.shape
+        #print 'gd shape:', gd.shape
 
-        gd = gd + 2 * lambda_reg * W[:,k]
+        gd += 2 * lambda_reg * W[:, k]
         #print gd_vec
         
-        W[:,k] = W[:,k] -lambda_w* gd
+        W[:, k] = W[:, k] - lambda_w * gd
         
     return W
         
