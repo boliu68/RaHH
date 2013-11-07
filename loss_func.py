@@ -18,7 +18,9 @@ def loss_func(hash_1, hash_2, R_pq, W, S, beta, gamma1, gamma2, gamma3):
     theta3 = 0
     
     for p in range(2):
-        
+
+        print p, 'domain begin'
+
         q = 1 - p
             
         rp = shape(hash[p])[0]
@@ -30,11 +32,15 @@ def loss_func(hash_1, hash_2, R_pq, W, S, beta, gamma1, gamma2, gamma3):
             for i in range(mp):
                 for j in range(mq):
                    #heterogeneous part of loss function
-                   l = math.log(1 + math.exp(-R_pq[i,j] * hash[q][k,j] * dot(transpose(W[:,k]),hash[p][:,i])))
-                   J[p] = J[p] + l
+                    l = math.log(1 + math.exp(-R_pq[i,j] * hash[q][k,j] * dot(transpose(W[:,k]),hash[p][:,i])))
+                    J[p] = J[p] + l
+
+                    #print k, i, j
 
             J[p] = J[p] + beta * math.pow((distance.norm(W[:,k], 2)),2)
-        
+
+        print 'finish one domain'
+
         #regularization part of loss function
         theta1 = theta1 + math.pow(lag.norm((hash[p] * hash[p] - eye(shape(hash[p])[0],shape(hash[p])[1])), 'fro'),2)
         theta2 = theta2 + math.pow(lag.norm(S[p][1],'fro'),2)
@@ -46,7 +52,9 @@ def loss_func(hash_1, hash_2, R_pq, W, S, beta, gamma1, gamma2, gamma3):
 
 
 def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q):
-    
+
+    print 'Train func begin'
+
     beta = 100 #heterogeneous
     gamma1 = 10 #regularization 1
     gamma2 = 3e-3 #regularization 2
@@ -55,6 +63,7 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q):
     lambda_h = 1e-3
     lambda_reg = 1e-1
 
+    print 'begin to calculate loss func'
     new_loss = loss_func(H_img, H_tag, R_pq, W, S, beta, gamma1, gamma2, gamma3)
     old_loss = new_loss + 200  #just for start
 

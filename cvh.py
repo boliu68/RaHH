@@ -17,16 +17,23 @@ def domain2view(fea_1,fea_2,similarity):
     #the image and tag whose similarity is greater than 
     #threshold is chosen as the different view for each (concept)
     #After transforming,the I is used to represent
-    
-    threshold = np.median(similarity)
+
+    print np.max(similarity)
+    print np.median(similarity)
+    print np.min(similarity)
+
+    threshold = .5#*np.median(similarity)
     indicator = similarity > threshold #For choosing the pair that will be used
 
     dim= [np.size(fea_1,0), np.size(fea_2,0)]
     
     num_x = np.sum(indicator)
-    
-    X_1 = np.zeros([num_x,dim[0]])
-    X_2 = np.zeros([num_x,dim[1]])
+
+    print 'CVH'
+    print num_x
+    print dim[0]
+    X_1 = np.zeros([num_x, dim[0]])
+    X_2 = np.zeros([num_x, dim[1]])
     
     count = 0
     

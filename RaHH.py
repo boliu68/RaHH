@@ -80,7 +80,7 @@ def RaHH():
         #test(img_fea, QA_fea, A_img, A_tag, bit, np.eye(bit,bit), GD)
 
     print 'begin RaHH train'
-    train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q)
+    train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q)
     
     
 
