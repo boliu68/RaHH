@@ -18,10 +18,6 @@ def domain2view(fea_1,fea_2,similarity):
     #threshold is chosen as the different view for each (concept)
     #After transforming,the I is used to represent
 
-    print np.max(similarity)
-    print np.median(similarity)
-    print np.min(similarity)
-
     threshold = .5#*np.median(similarity)
     indicator = similarity > threshold #For choosing the pair that will be used
 
@@ -29,9 +25,6 @@ def domain2view(fea_1,fea_2,similarity):
     
     num_x = np.sum(indicator)
 
-    print 'CVH'
-    print num_x
-    print dim[0]
     X_1 = np.zeros([num_x, dim[0]])
     X_2 = np.zeros([num_x, dim[1]])
     

@@ -33,7 +33,7 @@ def initialize(image_fea, tag_fea, similarity):
     [K, N, dim] = get_attr(image_fea, tag_fea, similarity)
 
     #the hash code length
-    hash_bit = [16,16]
+    hash_bit = [8,8]
     
     #Hash code rp*mp
     [H_img, H_tag, A_img, A_tag] = cvh(similarity, image_fea, tag_fea,hash_bit) 
@@ -45,8 +45,7 @@ def initialize(image_fea, tag_fea, similarity):
     S = [S_img, S_tag]
     
     R_p = np.eye(np.shape(image_fea)[1])
-    R_q = np.eye(np.shape(tag_fea)[1])
-    
+    R_q = np.eye(np.shape(tag_fea)[1]) 
     return [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag]
 
 def RaHH():

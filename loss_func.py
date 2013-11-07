@@ -23,23 +23,26 @@ def loss_func(hash_1, hash_2, R_pq, W, S, beta, gamma1, gamma2, gamma3):
 
         q = 1 - p
             
-        rp = shape(hash[p])[0]
+        rp = hash[p].shape[0]
+        rq = hash[q].shape[0]
+
         J.append(0)
        
        #Homogeneous loss function is considered as zero caused identical matrix is utlized to represent the homogeneous similarity
         
         hash_p_maped = dot(W, hash[q])
 
-        for k in range(rp):
+        for k in range(rq):
 
-            hashq_k = tile(hash[q][k, :], (range(R_pq.shape[0]), 1))
-            hashp_mapped_k = tile(hash_p_maped[k, :], (range(R_pq.shape[0]), 1))
+            print 'k:', k
 
-            print hashq_k.shape
-            print hashp_mapped_k.shape
+            hashq_k = tile(hash[q][k, :], (R_pq.shape[0], 1))
+            hashp_mapped_k = tile(hash_p_maped[k, :], (R_pq.shape[0], 1))
 
             J_tmp = (R_pq * hashq_k) * hashp_mapped_k
             J_tmp = log(1 + exp(-J_tmp))
+
+            J[p] += sum(sum(J_tmp))
 
             #for i in range(mp):
                 #for j in range(mq):
@@ -109,6 +112,7 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q):
             W = W.transpose()
             R_pq = R_pq.transpose()
             
+            W = update_w(H, R_pq, W, p, lambda_w, lambda_reg)
             print 'Updating H'
             [H, S] = update_h(fea, H, W, S, R_pq, p, lambda_h)
             
@@ -151,30 +155,35 @@ def update_h(fea, H, W, S, R_pq, p, lambda_h):
     
     Gradient = Gradient + gd_1 + gd_2 + gd_3
     
-    print 'graident 123 finished'
-    #print 'gd_1:', gd_1[0,0], 'gd2:', gd_2[0,0], 'gd3:', gd_3[0,0], 'gd:', Gradient[0,0]
-   
     Hq_map = dot(W.transpose(), H[p]) #hash code of q acquired from mapping Hp
     Hp_map = dot(W, H[q]) #hash code of p acquired from mapping Hq
 
     for k in range(rp):
+        print k
         for i in range(mp):
             
             gd = 0
             
-            for j in range(mq):
+            #for j in range(mq):
                 
-                for g in range(rq):
+                #for g in range(rq):
                     
                     #iteration for q's bit g
-                    gd = gd + (-R_pq[i,j] * H[q][g,j] * W[k,g]) / (1 + math.exp( R_pq[i,j] * H[q][g,j] * Hq_map[g, i]))#dot(transpose(W[:,g]), H[p][:, i])))
+                    #gd = gd + (-R_pq[i,j] * H[q][g,j] * W[k,g]) / (1 + math.exp( R_pq[i,j] * H[q][g,j] * Hq_map[g, i]))#dot(transpose(W[:,g]), H[p][:, i])))
 
-                #iterate for q's instance j
-                #gd = gd + (-R_pq[i,j] * dot(W[k, :] , H[q][:, j])) / (1 + math.exp(R_pq[i,j] * H[p][k, i] * dot(W[k, :], H[q][:, j])))
+                #gd = gd + (-R_pq[i,j] * Hp_map[k,j]) / (1 + math.exp(R_pq[i,j] * H[p][k, i] * Hp_map[k,j]))
+            #Gradient[k, i] = Gradient[k,i] + gd
         
-                gd = gd + (-R_pq[i,j] * Hp_map[k,j]) / (1 + math.exp(R_pq[i,j] * H[p][k, i] * Hp_map[k,j]))
+            R_pqij = tile(R_pq[i,:], (rq, 1))
+            H_qgj = H[q]
+            W_pqkg = tile(W[k, :].transpose(), (mq, 1)).transpose()
+            Wg_Hip = tile(Hq_map[:,i], (mq, 1)).transpose()
+
+            gd += sum(sum((R_pqij * H_qgj * W_pqkg) / (1 + exp(R_pqij * H_qgj * Wg_Hip))))
+            gd += sum(( - R_pq[i,:] * Hp_map[k,:]) / (1 + exp(R_pq[i, :] * Hp_map[k, :] * H[p][k,i]))) 
+            
             Gradient[k, i] = Gradient[k,i] + gd
-        
+
         H[p][k,:] = H[p][k,:] - lambda_h * Gradient[k,:]
         
         S[p] = update_S(fea[p], H[p])
@@ -201,16 +210,25 @@ def update_w(H, R_pq, W, p, lambda_reg, lambda_w):
         gd = zeros([1, rp])
         #print 'gdshape1:', gd.shape
         
-        for i in range(mp):
+        #for i in range(mp):
             
-            scale = 0
+        #scale = 0
 
-            for j in range(mq):
+            #for j in range(mq):
                 #gd = gd + (-R_pq[i,j] * H[q][k,j] * H[p][:, i]) / (1 + math.exp(R_pq[i,j] * H[q][k,j] * dot(W[:,k], H[p][:,i])))
-                scale =  (-R_pq[i,j] * H[q][k,j]) / (1 + math.exp(R_pq[i,j] * H[q][k,j] * Hq_maped[k,i]))
-            gd = gd + (scale * H[p][:,i])
+                #scale =  (-R_pq[i,j] * H[q][k,j]) / (1 + math.exp(R_pq[i,j] * H[q][k,j] * Hq_maped[k,i]))
+            #gd = gd + (scale * H[p][:,i])
 
+        #mp \times 1
+        Rpq_Hkj = R_pq * tile(H[q][k,:], (mp, 1))
         
+        gd_i = (-Rpq_Hkj) / (1 + exp(-Rpq_Hkj * tile(Hq_maped[k, :], (mq, 1)).transpose()))
+        gd_i = sum(gd_i, 1)
+        #print 'gd_i shape', gd_i.shape
+
+        gd = dot(H[p], gd_i.transpose())
+        print 'gd shape:', gd.shape
+
         gd = gd + 2 * lambda_reg * W[:,k]
         #print gd_vec
         
