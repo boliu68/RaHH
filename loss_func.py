@@ -79,8 +79,8 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q):
     gamma1 = 10 #regularization 1
     gamma2 = 3e-3 #regularization 2
     gamma3 = 3 #regualariation 3
-    lambda_w = 1e-3
-    lambda_h = 1e-3
+    lambda_w = 10 / H_img.shape[1]**2
+    lambda_h = 10/ H_img.shape[1]**2
     lambda_reg = 1e-1
 
     print 'begin to calculate loss func'
@@ -119,7 +119,7 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q):
             R_pq = R_pq.transpose()
 
             #print 'Updating H'
-            [H, S] = update_h(fea, H, W, S, R_pq, p, lambda_h)
+            #[H, S] = update_h(fea, H, W, S, R_pq, p, lambda_h)
             
             #print 'updating W'
             #update the mapping function w
@@ -241,7 +241,8 @@ def update_w(H, R_pq, W, p, lambda_reg, lambda_w):
         #mp \times 1
         Rpq_Hkj = R_pq * tile(H[q][k, :], (mp, 1))
         print 'Rpq_Hkj', Rpq_Hkj.shape
-        
+        print 'exp', (Rpq_Hkj * tile(Hq_maped[k, :], (mq, 1)).transpose()).shape
+
         gd_i = (-Rpq_Hkj) / (1 + exp(Rpq_Hkj * tile(Hq_maped[k, :], (mq, 1)).transpose()))
         gd_i = sum(gd_i, 1)
         #print 'gd_i shape', gd_i.shape

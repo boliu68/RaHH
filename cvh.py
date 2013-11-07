@@ -2,6 +2,7 @@ import numpy as np
 import scipy.linalg as scialg
 import load_data
 import HamDist
+import pylab as P
 
 #Reference : Kumar, S., & Udupa, R. (2011). 
 #Learning hash functions for cross-view similarity search. 
@@ -18,12 +19,22 @@ def domain2view(fea_1,fea_2,similarity):
     #threshold is chosen as the different view for each (concept)
     #After transforming,the I is used to represent
 
-    threshold = .5#*np.median(similarity)
+    print 'sim, max', similarity.max()
+    print 'sim, min', similarity.min()
+
+    P.figure()
+    n, bins, patches = P.hist(similarity, 10)
+    P.show()
+
+
+    threshold = similarity.min() + (similarity.max() - similarity.min()) / 5
     indicator = similarity > threshold #For choosing the pair that will be used
 
     dim= [np.size(fea_1,0), np.size(fea_2,0)]
     
     num_x = np.sum(indicator)
+
+    print 'numx', num_x
 
     X_1 = np.zeros([num_x, dim[0]])
     X_2 = np.zeros([num_x, dim[1]])

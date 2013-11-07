@@ -51,9 +51,9 @@ def initialize(image_fea, tag_fea, similarity):
 def RaHH():
     #R is the similarity to keep the consistent with origin paper
 
-    Tr_sim_path = 'Data/Test/similarityTra.txt'
-    Tr_img_path = 'Data/Test/images_features.txt'
-    Tr_tag_path = 'Data/Test/tags_features.txt'
+    Tr_sim_path = 'Data/Train/similarity.txt'
+    Tr_img_path = 'Data/Train/images_features.txt'
+    Tr_tag_path = 'Data/Train/tags_features.txt'
     Tst_sim_path = 'Data/Test/similarity.txt'
     Tst_img_path = 'Data/Test/images_features.txt'
     Tst_qa_path = 'Data/Test/QA_features.txt'
@@ -65,6 +65,13 @@ def RaHH():
     #similarty : m_p * m_q
     #QA_fea = d_p * m_p
     #GD = #img * #QA
+    img_ind = random.random_integers(0, Tr_img.shape[1], Tr_img.shape[1] / 20)
+    tag_ind = random.random_integers(0, Tr_tag.shape[1], Tr_tag.shape[1] / 20)
+
+    Tr_img = Tr_img[:, img_ind]
+    Tr_tag = Tr_tag[:, tag_ind]
+    Tr_sim = (Tr_sim[img_ind, :])[:, tag_ind]
+
     print 'Loading Data finish'
     print 'Train sim:', Tr_sim.shape, 'Train Img:', Tr_img.shape, 'Tr_tag:', Tr_tag.shape
     print 'Test sim:', Tst_sim.shape, 'Tst Img:', Tst_img.shape, 'Tst_qa:', Tst_qa.shape, 'GD:', gd.shape
