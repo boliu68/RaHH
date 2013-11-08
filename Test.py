@@ -8,8 +8,9 @@
 #bliuab@cse.ust.hk, 2013.11.2
 from numpy import *
 from HamDist import *
+import pylab as pl
 
-def test(img_hash, qa_hash ,bit, groundtruth):
+def test(img_hash, qa_hash ,bit, groundtruth, Tst_sim):
 
     dist_threshold = [.2,.4,.6,.8]
     GP = arange(4)
@@ -20,7 +21,8 @@ def test(img_hash, qa_hash ,bit, groundtruth):
         for j in range(qa_hash.shape[1]):
             #print i,j,HamDist(img_hash[:,i],qa_hash[:,j])
             dist[i, j] = HamDist(img_hash[:, i], qa_hash[:, j])
-        
+
+    i = 0
     for d in range(len(dist_threshold)):
     #set_printoptions(threshold='nan')
     #print dist
@@ -36,3 +38,15 @@ def test(img_hash, qa_hash ,bit, groundtruth):
         
         print 'TP_FP:', TP_FP, 'TP:', TP, 'P:', P
         print 'GP:', GP[d], 'GR:', GR[d]
+
+        neg_mean = Tst_sim[dist < thre]
+        pos_mean = Tst_sim[dist >= thre]
+        print 'neg:', mean(neg_mean)
+        print 'pos:', mean(pos_mean)
+
+        pl.close()
+        pl.plot(neg_mean.ravel(), ones((len(neg_mean.ravel()), 1)), 'go')
+        pl.plot(pos_mean.ravel(), ones((len(pos_mean.ravel()), 1)) + 1, 'ro')
+        pl.savefig(str(i) + '.jpg')
+
+        i += 1

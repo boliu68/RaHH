@@ -67,15 +67,15 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample):
     gamma1 = 10 #regularization 1
     gamma2 = 3e-3 #regularization 2
     gamma3 = 3 #regualariation 3
-    lambda_w = 0.3
-    lambda_h = 0.3
+    lambda_w = 0.1
+    lambda_h = 0.1
     lambda_reg = 1e-1
 
     print 'begin to calculate loss func'
     new_loss = loss_func(H_img, H_tag, R_pq, W, S, beta, gamma1, gamma2, gamma3)
     old_loss = new_loss + 20  # just for start
 
-    converge_threshold = .3
+    converge_threshold = 1
 
     fea = [img_fea, tag_fea]
     H = [H_img, H_tag]

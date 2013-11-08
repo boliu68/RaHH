@@ -83,19 +83,19 @@ def RaHH():
     print 'CVH finish'
     
     #bits = [8,16,32,64]
-    #[H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim)
+    [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim)
     
     #for bit in bits:
         #test(img_fea, QA_fea, A_img, A_tag, bit, np.eye(bit,bit), GD)
 
     print 'begin RaHH train'
-    #[H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False)
+    [H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False)
 
     print 'begin Test'
     [H_img_Tst, H_qa_Tst, W_Tst, S_Tst, Rp_Tst, Rq_Tst, A_img_Tst, A_qa_Tst] = initialize(Tst_img, Tst_qa, Tst_sim)
-    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst] = train(Tst_img, Tst_qa, H_img_Tst, H_qa_Tst, S_Tst, W_Tst, Tst_sim, Rp_Tst, Rq_Tst, False)
+    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst] = train(Tst_img, Tst_qa, H_img_Tst, H_qa_Tst, S, W, Tst_sim, Rp_Tst, Rq_Tst, True)
 
-    test(H_img_Tst, H_qa_Tst, 16, gd)
+    test(H_img_Tst, H_qa_Tst, 16, gd, Tst_sim)
 
 if __name__ == '__main__':
     
