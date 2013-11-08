@@ -2,6 +2,7 @@ import numpy as np
 import scipy.linalg as scialg
 import load_data
 import HamDist
+import pylab as P
 
 #Reference : Kumar, S., & Udupa, R. (2011). 
 #Learning hash functions for cross-view similarity search. 
@@ -18,20 +19,18 @@ def domain2view(fea_1,fea_2,similarity):
     #threshold is chosen as the different view for each (concept)
     #After transforming,the I is used to represent
 
-    print np.max(similarity)
-    print np.median(similarity)
-    print np.min(similarity)
+    print 'sim, max', similarity.max()
+    print 'sim, min', similarity.min()
 
-    threshold = .5#*np.median(similarity)
+    threshold = 0.001#similarity.min() + (similarity.max() - similarity.min()) / 5
     indicator = similarity > threshold #For choosing the pair that will be used
 
-    dim= [np.size(fea_1,0), np.size(fea_2,0)]
+    dim= [np.size(fea_1, 0), np.size(fea_2, 0)]
     
     num_x = np.sum(indicator)
 
-    print 'CVH'
-    print num_x
-    print dim[0]
+    print 'numx', num_x
+
     X_1 = np.zeros([num_x, dim[0]])
     X_2 = np.zeros([num_x, dim[1]])
     
@@ -42,8 +41,8 @@ def domain2view(fea_1,fea_2,similarity):
             
             if similarity[i, j] > threshold:
                 
-                X_1[count] = fea_1[:,i]
-                X_2[count] = fea_2[:,j]
+                X_1[count] = fea_1[:, i]
+                X_2[count] = fea_2[:, j]
                 count = count + 1
     
     return [X_1, X_2]
@@ -72,8 +71,8 @@ def train_CCA(X_1, X_2, eye_lambda):
     Cyx = np.dot(X_2t, X_1)
      
     #avoid Sigularity
-    Cxx = np.add(Cxx, np.multiply(eye_lambda,np.eye(np.shape(Cxx)[0]))) 
-    Cyy = np.add(Cyy, np.multiply(eye_lambda,np.eye(np.shape(Cyy)[0])))
+    Cxx = np.add(Cxx, np.multiply(eye_lambda, np.eye(np.shape(Cxx)[0])))
+    Cyy = np.add(Cyy, np.multiply(eye_lambda, np.eye(np.shape(Cyy)[0])))
 
     A = np.dot(Cxy,np.dot(np.linalg.pinv(Cyy),Cyx))
     B = Cxx
@@ -89,36 +88,16 @@ def train_CCA(X_1, X_2, eye_lambda):
     
 
 def cvh(image_tags_cross_similarity, image_features, tag_features, bit):
-
-    #[image_tags_cross_similarity, image_features, tag_features] = load_data.analysis()
-    #Return rp * mp
     
     [X_1, X_2] = domain2view(image_features, tag_features, image_tags_cross_similarity)
     
     [A_1, A_2] = hash_function(X_1, X_2)
-    
-    #print np.shape(A_1[:][0:bit[0]])
-    #print  np.shape(A_1[0:bit[0]][:])
-    
-    #print np.shape(image_features)
-    #print np.shape(A_1)
-    
+
     hash_1 = np.dot(np.transpose(A_1[:,0:bit[0]]),image_features)
     hash_2 = np.dot(np.transpose(A_2[:,0:bit[1]]),tag_features)
     
     hash_1 = np.sign(hash_1)
     hash_2 = np.sign(hash_2)
-    
-    #hash function
-    #hash_1 = np.transpose(np.sign(hash_1,))
-    #hash_2 = np.transpose(np.sign(hash_2,))
-    #print np.shape(hash_1)
-    
-    #for i in range(hash_1.shape[1]):
-        #for j in range(hash_2.shape[1]):
-            #print 'disttance', HamDist.HamDist(hash_1[:,i],hash_2[:,j])
-            #print 'data1', hash_1
-            #print 'data2', hash_2
 
     return [hash_1, hash_2, A_1.transpose(), A_2.transpose()]
     
@@ -126,8 +105,8 @@ if __name__ == '__main__':
     
     [image_tags_cross_similarity, image_features, tag_features] = load_data.analysis()
     
-    bit = [32,32]
-    [hash_1, hash_2 ] = cvh(image_tags_cross_similarity, image_features, tag_features,bit)
+    bit = [32, 32]
+    [hash_1, hash_2] = cvh(image_tags_cross_similarity, image_features, tag_features,bit)
     
     print np.shape(hash_1)
     print np.shape(hash_2)
@@ -135,4 +114,3 @@ if __name__ == '__main__':
     
     for i in range(np.shape(tag_features)[1]):
         print i,'  ', image_tags_cross_similarity[0][i],'Distance:', HamDist.HamDist(hash_1[:,0],hash_2[:,i])
-

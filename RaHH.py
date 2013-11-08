@@ -7,8 +7,9 @@ from Test import *
 #Puesdo-Code
 #Author: Bo Liu
 #Date: Oct. 05 2013
-#Reference: 
-#Ou, M., Cui, P., Wang, F., Wang, J., Zhu, W., & Yang, S. (2013). Comparing apples to oranges: a scalable solution with heterogeneous hashing. Paper presented at the Proceedings of the 19th ACM SIGKDD international conference on Knowledge discovery and data mining.
+#References:
+#Ou, M., Cui, P., Wang, F., Wang, J., Zhu, W., & Yang, S. (2013). Comparing apples to oranges: a scalable solution with heterogeneous hashing.
+#Paper presented at the Proceedings of the 19th ACM SIGKDD international conference on Knowledge discovery and data mining.
 #Rahh()
 #Input: X^p/data, R_p,intra_domain relation, R_pq inter-domain relation. r: the number of bit for each domain
 #Output: H^p: hash function, W: map function to map the hash code to another Hamming space.
@@ -33,20 +34,19 @@ def initialize(image_fea, tag_fea, similarity):
     [K, N, dim] = get_attr(image_fea, tag_fea, similarity)
 
     #the hash code length
-    hash_bit = [16,16]
+    hash_bit = [16, 16]
     
     #Hash code rp*mp
     [H_img, H_tag, A_img, A_tag] = cvh(similarity, image_fea, tag_fea,hash_bit) 
     #Heterogeneous mapping by image_hash'*W = tag_hash 
-    W = np.eye(hash_bit[0],hash_bit[1])
+    W = np.eye(hash_bit[0], hash_bit[1])
     
     S_img = update_S(image_fea, H_img)
     S_tag = update_S(tag_fea, H_tag)
     S = [S_img, S_tag]
     
     R_p = np.eye(np.shape(image_fea)[1])
-    R_q = np.eye(np.shape(tag_fea)[1])
-    
+    R_q = np.eye(np.shape(tag_fea)[1]) 
     return [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag]
 
 def RaHH():
@@ -64,27 +64,39 @@ def RaHH():
     #image_fea d_p * m_p
     #tag_fea d_q* m_q
     #similarty : m_p * m_q
-	#QA_fea = d_p * m_p
-	#GD = #img * #QA
+    #QA_fea = d_p * m_p
+    #GD = #img * #QA
+    img_ind = random.random_integers(0, Tr_img.shape[1] - 1, Tr_img.shape[1] / 50)
+    tag_ind = random.random_integers(0, Tr_tag.shape[1] - 1, Tr_tag.shape[1] / 50)
+
+
+    #sub sampling
+    Tr_img = Tr_img[:, img_ind]
+    Tr_tag = Tr_tag[:, tag_ind]
+    Tr_sim = (Tr_sim[img_ind, :])[:, tag_ind]
+
     print 'Loading Data finish'
     print 'Train sim:', Tr_sim.shape, 'Train Img:', Tr_img.shape, 'Tr_tag:', Tr_tag.shape
     print 'Test sim:', Tst_sim.shape, 'Tst Img:', Tst_img.shape, 'Tst_qa:', Tst_qa.shape, 'GD:', gd.shape
 
-    [K, N, dim] = get_attr(Tr_img, Tr_tag, Tr_sim)
+    #[K, N, dim] = get_attr(Tr_img, Tr_tag, Tr_sim)
     print 'CVH finish'
     
     #bits = [8,16,32,64]
-    [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim)	
+    #[H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim)
     
     #for bit in bits:
         #test(img_fea, QA_fea, A_img, A_tag, bit, np.eye(bit,bit), GD)
 
     print 'begin RaHH train'
-    train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q)
-    
-    
+    #[H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False)
+
+    print 'begin Test'
+    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst, Rp_Tst, Rq_Tst, A_img_Tst, A_qa_Tst] = initialize(Tst_img, Tst_qa, Tst_sim)
+    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst] = train(Tst_img, Tst_qa, H_img_Tst, H_qa_Tst, S_Tst, W_Tst, Tst_sim, Rp_Tst, Rq_Tst, False)
+
+    test(H_img_Tst, H_qa_Tst, 16, gd)
 
 if __name__ == '__main__':
     
     RaHH()
-    

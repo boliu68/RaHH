@@ -19,7 +19,7 @@ def test(img_hash, qa_hash ,bit, groundtruth):
     for i in range(img_hash.shape[1]):
         for j in range(qa_hash.shape[1]):
             #print i,j,HamDist(img_hash[:,i],qa_hash[:,j])
-            dist[i,j] = HamDist(img_hash[:,i], qa_hash[:,j])
+            dist[i, j] = HamDist(img_hash[:, i], qa_hash[:, j])
         
     for d in range(len(dist_threshold)):
     #set_printoptions(threshold='nan')
@@ -31,7 +31,7 @@ def test(img_hash, qa_hash ,bit, groundtruth):
         TP = sum((dist<thre) * (groundtruth == 1))
         P = sum(groundtruth == 1)
 
-        GP[d] = 100.000 *  TP / TP_FP 
+        GP[d] = 100.000 * TP / TP_FP
         GR[d] = 100.000 * TP/P
         
         print 'TP_FP:', TP_FP, 'TP:', TP, 'P:', P
