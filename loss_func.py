@@ -27,13 +27,24 @@ def loss_func(hash_1, hash_2, R_pq, W, S, beta, gamma1, gamma2, gamma3):
         J.append(0)
        
        #Homogeneous loss function is considered as zero caused identical matrix is utlized to represent the homogeneous similarity
-        
+
+        hash_p_maped = dot(W, hash[q])
+
         for k in range(rp):
-            for i in range(mp):
-                for j in range(mq):
+
+            hashq_k = array([range(R_pq.shape[0]), hash[q][k,:]])
+            hashp_mapped_k = array([range(R_pq.shape[0]), hash_p_maped[k, :]])
+
+            print hashq_k.shape
+            print hashp_mapped_k.shape
+
+
+
+            #for i in range(mp):
+                #for j in range(mq):
                    #heterogeneous part of loss function
-                    l = math.log(1 + math.exp(-R_pq[i,j] * hash[q][k,j] * dot(transpose(W[:,k]),hash[p][:,i])))
-                    J[p] = J[p] + l
+                    #l = math.log(1 + math.exp(-R_pq[i,j] * hash[q][k,j] * dot(transpose(W[:,k]),hash[p][:,i])))
+                    #J[p] = J[p] + l
 
                     #print k, i, j
 

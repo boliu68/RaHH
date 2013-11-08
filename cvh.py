@@ -134,5 +134,5 @@ if __name__ == '__main__':
     print hash_1
     
     for i in range(np.shape(tag_features)[1]):
-		print i,'  ', image_tags_cross_similarity[0][i],'Distance:', HamDist.HamDist(hash_1[:,0],hash_2[:,i])
+        print i,'  ', image_tags_cross_similarity[0][i],'Distance:', HamDist.HamDist(hash_1[:,0],hash_2[:,i])
 
