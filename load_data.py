@@ -1,7 +1,6 @@
 #Load format data from text
 #Author: Bo Liu
 #Date: 2013.10.15
-
 import numpy as np
 import os
 

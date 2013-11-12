@@ -34,7 +34,7 @@ def initialize(image_fea, tag_fea, similarity):
     [K, N, dim] = get_attr(image_fea, tag_fea, similarity)
 
     #the hash code length
-    hash_bit = [16, 16]
+    hash_bit = [32, 32]
     
     #Hash code rp*mp
     [H_img, H_tag, A_img, A_tag] = cvh(similarity, image_fea, tag_fea,hash_bit) 
@@ -52,13 +52,16 @@ def initialize(image_fea, tag_fea, similarity):
 def RaHH():
     #R is the similarity to keep the consistent with origin paper
 
-    Tr_sim_path = 'Data/Train/similarity.txt'
-    Tr_img_path = 'Data/Train/images_features.txt'
-    Tr_tag_path = 'Data/Train/tags_features.txt'
-    Tst_sim_path = 'Data/Test/similarity.txt'
-    Tst_img_path = 'Data/Test/images_features.txt'
-    Tst_qa_path = 'Data/Test/QA_features.txt'
-    gd_path = 'Data/Test/groundtruth.txt'
+    #Tr_sim_path = 'Data/Train/similarity.txt'
+    #Tr_img_path = 'Data/Train/images_features.txt'
+    #Tr_tag_path = 'Data/Train/tags_features.txt'
+    #Tst_sim_path = 'Data/Test/similarity.txt'
+    #Tst_img_path = 'Data/Test/images_features.txt'
+    #Tst_qa_path = 'Data/Test/QA_features.txt'
+    #gd_path = 'Data/Test/groundtruth.txt'
+    Tr_img_path = 'NUS_Wide_Processed/Training/images_features.txt'
+    Tr_tag_path = 'NUS_Wide_Processed/Training/tags_features.txt'
+    Tr_sim_path = 'NUS_Wide_Processed/Training/similarity.txt'
 
     [Tr_sim, Tr_img, Tr_tag, Tst_sim, Tst_img, Tst_qa, gd] = load_data.analysis(Tr_sim_path, Tr_img_path, Tr_tag_path, Tst_sim_path, Tst_img_path, Tst_qa_path, gd_path)
     #image_fea d_p * m_p
@@ -83,17 +86,17 @@ def RaHH():
     print 'CVH finish'
     
     #bits = [8,16,32,64]
-    [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim)
+    #[H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim)
     
     #for bit in bits:
         #test(img_fea, QA_fea, A_img, A_tag, bit, np.eye(bit,bit), GD)
 
     print 'begin RaHH train'
-    [H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False)
+    #[H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False)
 
     print 'begin Test'
-    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst, Rp_Tst, Rq_Tst, A_img_Tst, A_qa_Tst] = initialize(Tst_img, Tst_qa, Tst_sim)
-    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst] = train(Tst_img, Tst_qa, H_img_Tst, H_qa_Tst, S, W, Tst_sim, Rp_Tst, Rq_Tst, True)
+    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst, Rp_Tst, Rq_Tst, A_img_Tst, A_qa_Tst] = initialize(Tst_img, Tst_qa, gd)
+    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst] = train(Tst_img, Tst_qa, H_img_Tst, H_qa_Tst, S_Tst, W_Tst, gd, Rp_Tst, Rq_Tst, False)
 
     test(H_img_Tst, H_qa_Tst, 16, gd, Tst_sim)
 
