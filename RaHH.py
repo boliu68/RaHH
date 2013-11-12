@@ -20,8 +20,8 @@ def get_attr(image_fea, tag_fea, similarity):
     #N #data instances
     #dim #data feature dimension
     K = 2
-    N = [int(np.size(image_fea,1)),int(np.size(tag_fea,1))]
-    dim = [int(np.size(image_fea,0)),int(np.size(tag_fea,0))]
+    N = [int(np.size(image_fea, 1)),int(np.size(tag_fea, 1))]
+    dim = [int(np.size(image_fea, 0)),int(np.size(tag_fea, 0))]
 
     return [K, N, dim]
 
@@ -34,7 +34,7 @@ def initialize(image_fea, tag_fea, similarity):
     [K, N, dim] = get_attr(image_fea, tag_fea, similarity)
 
     #the hash code length
-    hash_bit = [32, 32]
+    hash_bit = [4, 4]
     
     #Hash code rp*mp
     [H_img, H_tag, A_img, A_tag] = cvh(similarity, image_fea, tag_fea,hash_bit) 
@@ -55,7 +55,6 @@ def RaHH():
     #Tr_sim_path = 'Data/Train/similarity.txt'
     #Tr_img_path = 'Data/Train/images_features.txt'
     #Tr_tag_path = 'Data/Train/tags_features.txt'
-    #Tst_sim_path = 'Data/Test/similarity.txt'
     #Tst_img_path = 'Data/Test/images_features.txt'
     #Tst_qa_path = 'Data/Test/QA_features.txt'
     #gd_path = 'Data/Test/groundtruth.txt'
@@ -72,10 +71,9 @@ def RaHH():
     #similarty : m_p * m_q
     #QA_fea = d_p * m_p
     #GD = #img * #QA
-    img_ind = random.random_integers(0, Tr_img.shape[1] - 1, Tr_img.shape[1] / 50)
-    tag_ind = random.random_integers(0, Tr_tag.shape[1] - 1, Tr_tag.shape[1] / 50)
 
-
+    img_ind = random.random_integers(0, Tr_img.shape[1] - 1, 300) #Tr_img.shape[1]/50)
+    tag_ind = random.random_integers(0, Tr_tag.shape[1] - 1, 300) #Tr_tag.shape[1]/50)
     #sub sampling
     Tr_img = Tr_img[:, img_ind]
     Tr_tag = Tr_tag[:, tag_ind]
@@ -94,11 +92,20 @@ def RaHH():
     print 'begin RaHH train'
     [H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False)
 
-    print 'begin Test'
-    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst, Rp_Tst, Rq_Tst, A_img_Tst, A_qa_Tst] = initialize(Tst_img, Tst_qa, gd)
-    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst] = train(Tst_img, Tst_qa, H_img_Tst, H_qa_Tst, S_Tst, W_Tst, gd, Rp_Tst, Rq_Tst, False)
+    print '---------------begin Test----------------------'
 
-    test(H_img_Tst, H_qa_Tst, 16, gd, Tst_sim)
+    img_ind = random.random_integers(0, Tst_img.shape[1] - 1, Tst_img.shape[1]/5)
+    tag_ind = random.random_integers(0, Tst_qa.shape[1] - 1, Tst_qa.shape[1]/5)
+    Tst_img = Tst_img[:, img_ind]
+    Tst_qa = Tst_qa[:, tag_ind]
+    gd = (gd[img_ind, :])[:, tag_ind]
+
+    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst, Rp_Tst, Rq_Tst, A_img_Tst, A_qa_Tst] = initialize(Tst_img, Tst_qa, gd)
+    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst] = train(Tst_img, Tst_qa, H_img_Tst, H_qa_Tst, S, W, gd, Rp_Tst, Rq_Tst, True)
+
+    print '---------------Result---------------------------'
+    H_img_Tst = np.sign(dot(W.transpose(), H_img_Tst))
+    test(H_img_Tst, H_qa_Tst, gd)
 
 if __name__ == '__main__':
     

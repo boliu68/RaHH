@@ -13,16 +13,12 @@ import pylab as P
 #Output: The hash function for each view/domain/task. 
 #For initialize RaHH. Can also be used as baseline.
 
-def domain2view(fea_1,fea_2,similarity):
+def domain2view(fea_1, fea_2, similarity):
     #Transform the setting of data
     #the image and tag whose similarity is greater than 
     #threshold is chosen as the different view for each (concept)
     #After transforming,the I is used to represent
-
-    print 'sim, max', similarity.max()
-    print 'sim, min', similarity.min()
-
-    threshold = 0.001#similarity.min() + (similarity.max() - similarity.min()) / 5
+    threshold = 0.001
     indicator = similarity > threshold #For choosing the pair that will be used
 
     dim= [np.size(fea_1, 0), np.size(fea_2, 0)]
@@ -43,7 +39,7 @@ def domain2view(fea_1,fea_2,similarity):
                 
                 X_1[count] = fea_1[:, i]
                 X_2[count] = fea_2[:, j]
-                count = count + 1
+                count += 1
     
     return [X_1, X_2]
 
@@ -74,15 +70,15 @@ def train_CCA(X_1, X_2, eye_lambda):
     Cxx = np.add(Cxx, np.multiply(eye_lambda, np.eye(np.shape(Cxx)[0])))
     Cyy = np.add(Cyy, np.multiply(eye_lambda, np.eye(np.shape(Cyy)[0])))
 
-    A = np.dot(Cxy,np.dot(np.linalg.pinv(Cyy),Cyx))
+    A = np.dot(Cxy,np.dot(np.linalg.pinv(Cyy), Cyx))
     B = Cxx
     
-    [eigval, eigvec] = scialg.eig(A,B)
+    [eigval, eigvec] = scialg.eig(A, B)
     
     A1 = np.real(eigvec)
     eigval = np.diag(np.real(eigval))
     
-    A2 = np.dot(np.dot(np.dot(np.linalg.pinv(Cyy),np.transpose(Cxy)), A1), np.linalg.inv(eigval))
+    A2 = np.dot(np.dot(np.dot(np.linalg.pinv(Cyy), np.transpose(Cxy)), A1), np.linalg.pinv(eigval))
     
     return [A1, A2]
     
@@ -93,8 +89,8 @@ def cvh(image_tags_cross_similarity, image_features, tag_features, bit):
     
     [A_1, A_2] = hash_function(X_1, X_2)
 
-    hash_1 = np.dot(np.transpose(A_1[:,0:bit[0]]),image_features)
-    hash_2 = np.dot(np.transpose(A_2[:,0:bit[1]]),tag_features)
+    hash_1 = np.dot(np.transpose(A_1[:, 0:bit[0]]), image_features)
+    hash_2 = np.dot(np.transpose(A_2[:, 0:bit[1]]), tag_features)
     
     hash_1 = np.sign(hash_1)
     hash_2 = np.sign(hash_2)
@@ -113,4 +109,4 @@ if __name__ == '__main__':
     print hash_1
     
     for i in range(np.shape(tag_features)[1]):
-        print i,'  ', image_tags_cross_similarity[0][i],'Distance:', HamDist.HamDist(hash_1[:,0],hash_2[:,i])
+        print i,'  ', image_tags_cross_similarity[0][i], 'Distance:', HamDist.HamDist(hash_1[:,0], hash_2[:,i])

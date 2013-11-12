@@ -6,8 +6,8 @@ import os
 
 
 def analysis(Tr_sim, Tr_fea1, Tr_fea2, Tst_fea1, Tst_fea2, GD_Path):
-    num_img_fea = 500
-    num_tag_fea = 100
+    #num_img_fea = 500
+    #num_tag_fea = 100
 
     path = os.getcwd()
 
@@ -19,7 +19,6 @@ def analysis(Tr_sim, Tr_fea1, Tr_fea2, Tst_fea1, Tst_fea2, GD_Path):
     #Tst_sim_path = os.path.join(path, Tst_sim)
     Tst_img_path = os.path.join(path, Tst_fea1)
     Tst_qa_path = os.path.join(path, Tst_fea2)
-
     gd_path = os.path.join(path, GD_Path)
 
     Tr_sim = np.loadtxt(Tr_sim_path)

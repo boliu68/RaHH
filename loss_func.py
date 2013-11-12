@@ -20,12 +20,11 @@ def loss_func(hash_1, hash_2, R_pq, W, S, beta, gamma1, gamma2, gamma3):
 
     R_pqT = R_pq.transpose()
 
+    W_temp = W
+
     for p in range(2):
 
         R_pqT = R_pqT.transpose()
-
-        #print p, 'domain begin'
-
         q = 1 - p
 
         rp = hash[p].shape[0]
@@ -34,20 +33,25 @@ def loss_func(hash_1, hash_2, R_pq, W, S, beta, gamma1, gamma2, gamma3):
         J.append(0)
         J_l.append(0)
 
-        #Homogeneous loss function is considered as zero caused identical matrix is utlized to represent the homogeneous similarity
-        hash_p_maped = dot(W, hash[q])
+        #Homogeneous loss function is considered as zero
+        #caused identical matrix is utlized to represent the homogeneous similarity
+        W_temp = W_temp.transpose()
+        hash_p_maped = dot(W_temp, hash[p])
 
         for k in range(rq):
-            #print 'k:', k
 
             hashq_k = tile(hash[q][k, :], (R_pqT.shape[0], 1))
-            hashp_mapped_k = tile(hash_p_maped[k, :], (R_pqT.shape[0], 1))
+            hashp_mapped_k = tile((hash_p_maped[k, :]), (R_pqT.shape[1], 1)).transpose()
+            ##
+            #print R_pqT.shape
+            #print hashq_k.shape
+            #print hashp_mapped_k.shape
 
             J_tmp = (R_pqT * hashq_k) * hashp_mapped_k
 
             J[p] += sum(log(1 + exp(-J_tmp)))
 
-            J[p] += beta * math.pow((distance.norm(W[:, k], 2)), 2)
+            J[p] += beta * math.pow((distance.norm(W_temp[k, :], 2)), 2)
         #print 'finish one domain'
 
         #regularization part of loss function
@@ -75,7 +79,11 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample):
     new_loss = loss_func(H_img, H_tag, R_pq, W, S, beta, gamma1, gamma2, gamma3)
     old_loss = new_loss + 20  # just for start
 
-    converge_threshold = 1
+    #if OutofSample:
+    #    converge_threshold = 1e-1 /
+    #else:
+    converge_threshold = 1 / sqrt(img_fea.shape[1] * tag_fea.shape[1])
+    print 'converge_threshol:', converge_threshold
 
     fea = [img_fea, tag_fea]
     H = [H_img, H_tag]
@@ -87,7 +95,7 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample):
 
     iteration = 0
 
-    while old_loss - new_loss > converge_threshold:
+    while (old_loss - new_loss > converge_threshold) and (iteration < 10) :
 
         iteration += 1
 
@@ -192,8 +200,6 @@ def update_w(H, R_pq, W, p, lambda_reg, lambda_w):
     Hq_maped = dot(W.transpose(), H[p])
 
     for k in range(rq):
-
-        gd = zeros([1, rp])
 
         #mp \times 1
         Rpq_Hkj = R_pq * tile(H[q][k, :], (mp, 1))
