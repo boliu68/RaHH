@@ -27,6 +27,9 @@ def test(img_hash, qa_hash, groundtruth):
 
     i = 0
 
+    print 'dist:', dist.shape
+    print 'gd:', groundtruth.shape
+
     for thre in dist_threshold:
     #set_printoptions(threshold='nan')
 

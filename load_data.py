@@ -4,6 +4,9 @@
 import numpy as np
 import os
 
+def normalize(fea):
+
+    return (fea-fea.min()) / (fea.max() - fea.min())
 
 def analysis(Tr_sim, Tr_fea1, Tr_fea2, Tst_fea1, Tst_fea2, GD_Path):
     #num_img_fea = 500
@@ -102,4 +105,10 @@ def analysis(Tr_sim, Tr_fea1, Tr_fea2, Tst_fea1, Tst_fea2, GD_Path):
 
     #Return the data set matrix that is dimension \times instance
     #Ground Truth is images \times QA
+
+    Tr_img = normalize(Tr_img)
+    Tr_tag = normalize(Tr_tag)
+    Tst_img = normalize(Tst_img)
+    Tst_qa = normalize(Tst_qa)
+
     return [Tr_sim, Tr_img.transpose(), Tr_tag.transpose(), Tst_img.transpose(), Tst_qa.transpose(), gd]

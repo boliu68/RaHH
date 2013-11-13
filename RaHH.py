@@ -3,6 +3,10 @@ import numpy as np
 from cvh import cvh
 from loss_func import *
 from Test import *
+from OutSample import *
+from init import *
+from Train import *
+
 #Relation-aware Heterogeneous Hashing(RaHH)
 #Puesdo-Code
 #Author: Bo Liu
@@ -13,41 +17,23 @@ from Test import *
 #Rahh()
 #Input: X^p/data, R_p,intra_domain relation, R_pq inter-domain relation. r: the number of bit for each domain
 #Output: H^p: hash function, W: map function to map the hash code to another Hamming space.
+def subsampling(fea1, fea2, sim, lin, num):
 
-def get_attr(image_fea, tag_fea, similarity):
-    #The attribute of the input data
-    #K #domain
-    #N #data instances
-    #dim #data feature dimension
-    K = 2
-    N = [int(np.size(image_fea, 1)),int(np.size(tag_fea, 1))]
-    dim = [int(np.size(image_fea, 0)),int(np.size(tag_fea, 0))]
+    if lin == 0:
 
-    return [K, N, dim]
+        fea1_ind = random.random_integers(0, fea1.shape[1] -1 , num)
+        fea2_ind = random.random_integers(0, fea2.shape[1] - 1, num)
+    else:
 
+        if num == 0:
+            fea1_ind = random.random_integers(0, fea1.shape[1] - 1, fea1.shape[1] / lin)
+            fea2_ind = random.random_integers(0, fea2.shape[1] - 1, fea2.shape[1] / lin)
 
-def initialize(image_fea, tag_fea, similarity):
-    #Initialize the hash code for image and tag using CVH
-    #Initialize the inter domain mapping matrix W as I 
-    #Initialize the matrix S
-    
-    [K, N, dim] = get_attr(image_fea, tag_fea, similarity)
+    fea1 = fea1[:, fea1_ind]
+    fea2 = fea2[:, fea2_ind]
+    sim = (sim[fea1_ind, :])[:, fea2_ind]
 
-    #the hash code length
-    hash_bit = [4, 4]
-    
-    #Hash code rp*mp
-    [H_img, H_tag, A_img, A_tag] = cvh(similarity, image_fea, tag_fea,hash_bit) 
-    #Heterogeneous mapping by image_hash'*W = tag_hash 
-    W = np.eye(hash_bit[0], hash_bit[1])
-    
-    S_img = update_S(image_fea, H_img)
-    S_tag = update_S(tag_fea, H_tag)
-    S = [S_img, S_tag]
-    
-    R_p = np.eye(np.shape(image_fea)[1])
-    R_q = np.eye(np.shape(tag_fea)[1]) 
-    return [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag]
+    return fea1, fea2, sim
 
 def RaHH():
     #R is the similarity to keep the consistent with origin paper
@@ -71,41 +57,30 @@ def RaHH():
     #similarty : m_p * m_q
     #QA_fea = d_p * m_p
     #GD = #img * #QA
-
-    img_ind = random.random_integers(0, Tr_img.shape[1] - 1, 300) #Tr_img.shape[1]/50)
-    tag_ind = random.random_integers(0, Tr_tag.shape[1] - 1, 300) #Tr_tag.shape[1]/50)
-    #sub sampling
-    Tr_img = Tr_img[:, img_ind]
-    Tr_tag = Tr_tag[:, tag_ind]
-    Tr_sim = (Tr_sim[img_ind, :])[:, tag_ind]
+    Tr_img, Tr_tag, Tr_sim = subsampling(Tr_img, Tr_tag, Tr_sim, 0, 300)
 
     print 'Loading Data finish'
     print 'Train sim:', Tr_sim.shape, 'Train Img:', Tr_img.shape, 'Tr_tag:', Tr_tag.shape
     print 'Tst Img:', Tst_img.shape, 'Tst_qa:', Tst_qa.shape, 'GD:', gd.shape
 
-    #[K, N, dim] = get_attr(Tr_img, Tr_tag, Tr_sim)
-    print 'CVH finish'
-    
-    #bits = [8,16,32,64]
+    print '----------------CVH finish----------------------'
+
     [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim)
 
     print 'begin RaHH train'
-    [H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False)
+    [H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False, 0, 0)
 
     print '---------------begin Test----------------------'
 
-    img_ind = random.random_integers(0, Tst_img.shape[1] - 1, Tst_img.shape[1]/5)
-    tag_ind = random.random_integers(0, Tst_qa.shape[1] - 1, Tst_qa.shape[1]/5)
-    Tst_img = Tst_img[:, img_ind]
-    Tst_qa = Tst_qa[:, tag_ind]
-    gd = (gd[img_ind, :])[:, tag_ind]
+    Tst_img, Tst_qa, gd = subsampling(Tst_img, Tst_qa, gd, 20, 0)
 
-    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst, Rp_Tst, Rq_Tst, A_img_Tst, A_qa_Tst] = initialize(Tst_img, Tst_qa, gd)
-    [H_img_Tst, H_qa_Tst, W_Tst, S_Tst] = train(Tst_img, Tst_qa, H_img_Tst, H_qa_Tst, S, W, gd, Rp_Tst, Rq_Tst, True)
+    OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img, H_tag, gd)
 
-    print '---------------Result---------------------------'
-    H_img_Tst = np.sign(dot(W.transpose(), H_img_Tst))
-    test(H_img_Tst, H_qa_Tst, gd)
+    #[H_img_Tst, H_qa_Tst, W_Tst, S_Tst, Rp_Tst, Rq_Tst, A_img_Tst, A_qa_Tst] = initialize(Tst_img, Tst_qa, Tst_sim)
+    #[H_img_Tst, H_qa_Tst, W_Tst, S_Tst] = train(Tst_img, Tst_qa, H_img_Tst, H_qa_Tst, S, W, Tst_sim, Rp_Tst, Rq_Tst, True)
+    #print '---------------Result---------------------------'
+    #H_img_Tst = np.sign(dot(W.transpose(), H_img_Tst))
+    #test(H_img_Tst, H_qa_Tst, gd)
 
 if __name__ == '__main__':
     
