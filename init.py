@@ -15,7 +15,7 @@ def get_attr(image_fea, tag_fea, similarity):
     return [K, N, dim]
 
 
-def initialize(image_fea, tag_fea, similarity):
+def initialize(image_fea, tag_fea, similarity, bit):
     #Initialize the hash code for image and tag using CVH
     #Initialize the inter domain mapping matrix W as I
     #Initialize the matrix S
@@ -23,7 +23,8 @@ def initialize(image_fea, tag_fea, similarity):
     [K, N, dim] = get_attr(image_fea, tag_fea, similarity)
 
     #the hash code length
-    hash_bit = [4, 4]
+    #hash_bit = [4, 4]
+    hash_bit = bit
 
     #Hash code rp*mp
     [H_img, H_tag, A_img, A_tag] = cvh(similarity, image_fea, tag_fea,hash_bit)

@@ -25,7 +25,7 @@ def domain2view(fea_1, fea_2, similarity):
     
     num_x = np.sum(indicator)
 
-    print 'numx', num_x
+    #print 'numx', num_x
 
     X_1 = np.zeros([num_x, dim[0]])
     X_2 = np.zeros([num_x, dim[1]])

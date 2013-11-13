@@ -12,6 +12,8 @@ import pylab as pl
 
 def test(img_hash, qa_hash, groundtruth):
 
+
+    print '-----------------------------------------------'
     dist = zeros((img_hash.shape[1],qa_hash.shape[1]))
     for i in range(img_hash.shape[1]):
         for j in range(qa_hash.shape[1]):
@@ -27,8 +29,8 @@ def test(img_hash, qa_hash, groundtruth):
 
     i = 0
 
-    print 'dist:', dist.shape
-    print 'gd:', groundtruth.shape
+    #print 'dist:', dist.shape
+    #print 'gd:', groundtruth.shape
 
     for thre in dist_threshold:
     #set_printoptions(threshold='nan')
@@ -38,11 +40,12 @@ def test(img_hash, qa_hash, groundtruth):
         P = sum(groundtruth == 1)
 
 
-        GP[i] = 100.000000 * TP / TP_FP
-        GR[i] = 100.000000 * TP / P
+        GP[i] = (100.000000 * TP) / TP_FP
+        GR[i] = (100.000000 * TP) / P
 
-        print 'TP_FP:', TP_FP, 'TP:', TP, 'P:', P
-        print 'GP:', GP[i], 'GR:', GR[i]
+        print 'bit1:', img_hash.shape[0], 'bit2:', img_hash.shape[1],'GP:', GP[i], 'GR:', GR[i]
+        #print 'GP:', GP[i], 'GR:', GR[i]
+
 
         i += 1
         #neg_mean = Tst_sim[dist < thre]

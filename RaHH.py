@@ -35,7 +35,7 @@ def subsampling(fea1, fea2, sim, lin, num):
 
     return fea1, fea2, sim
 
-def RaHH():
+def RaHH(bit):
     #R is the similarity to keep the consistent with origin paper
 
     #Tr_sim_path = 'Data/Train/similarity.txt'
@@ -59,29 +59,36 @@ def RaHH():
     #GD = #img * #QA
     Tr_img, Tr_tag, Tr_sim = subsampling(Tr_img, Tr_tag, Tr_sim, 0, 300)
 
-    print 'Loading Data finish'
-    print 'Train sim:', Tr_sim.shape, 'Train Img:', Tr_img.shape, 'Tr_tag:', Tr_tag.shape
-    print 'Tst Img:', Tst_img.shape, 'Tst_qa:', Tst_qa.shape, 'GD:', gd.shape
+    #print 'Loading Data finish'
+    #print 'Train sim:', Tr_sim.shape, 'Train Img:', Tr_img.shape, 'Tr_tag:', Tr_tag.shape
+    #print 'Tst Img:', Tst_img.shape, 'Tst_qa:', Tst_qa.shape, 'GD:', gd.shape
+    #
+    #print '----------------CVH finish----------------------'
 
-    print '----------------CVH finish----------------------'
+    [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim, bit)
 
-    [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim)
-
-    print 'begin RaHH train'
+    #print 'begin RaHH train'
     [H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False, 0, 0)
 
-    print '---------------begin Test----------------------'
+    #print '---------------begin Test----------------------'
 
     Tst_img, Tst_qa, gd = subsampling(Tst_img, Tst_qa, gd, 20, 0)
 
-    OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img, H_tag, gd)
+    OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img, H_tag, gd, bit)
 
     #[H_img_Tst, H_qa_Tst, W_Tst, S_Tst, Rp_Tst, Rq_Tst, A_img_Tst, A_qa_Tst] = initialize(Tst_img, Tst_qa, Tst_sim)
     #[H_img_Tst, H_qa_Tst, W_Tst, S_Tst] = train(Tst_img, Tst_qa, H_img_Tst, H_qa_Tst, S, W, Tst_sim, Rp_Tst, Rq_Tst, True)
     #print '---------------Result---------------------------'
+
+
+    #H_img_Tst = dot()
     #H_img_Tst = np.sign(dot(W.transpose(), H_img_Tst))
     #test(H_img_Tst, H_qa_Tst, gd)
 
 if __name__ == '__main__':
-    
-    RaHH()
+
+    bit = [4, 8, 16, 24, 32]
+
+    for bit1 in bit:
+        for bit2 in bit:
+            RaHH([bit1, bit2])

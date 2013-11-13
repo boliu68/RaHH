@@ -41,6 +41,8 @@ def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta,
         J_homo = (Ap * H_distance).sum()
         J[p] += alpha * J_homo
 
+        #print 'J homo:', J_homo
+
         #Heterogeneous
         #caused identical matrix is utlized to represent the homogeneous similarity
         W_temp = W_temp.transpose()
@@ -56,6 +58,8 @@ def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta,
             J[p] += sum(log(1 + exp(-J_tmp)))
 
             J[p] += beta * math.pow((distance.norm(W_temp[k, :], 2)), 2)
+
+        #print 'Hetero:', J[p]
 
         #regularization part of loss function
         theta1 += math.pow(lag.norm((hash[p] * hash[p] - eye(shape(hash[p])[0], shape(hash[p])[1])), 'fro'), 2)

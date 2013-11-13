@@ -4,20 +4,20 @@ from loss_func import *
 from update import *
 
 def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_mp, up_mq):
-    print 'Train func begin'
+    #print 'Train func begin'
 
-    alpha = 100
-    beta = 100 #heterogeneous
-    gamma1 = 10 #regularization 1
+    alpha = 1000
+    beta = 10 #heterogeneous
+    gamma1 = 1 #regularization 1
     gamma2 = 3e-3 #regularization 2
-    gamma3 = 3 #regualariation 3
+    gamma3 = .3 #regualariation 3
     lambda_w = 0.3
     lambda_h = 0.3
     lambda_reg = 1e-1
     converge_threshold = 1e-4 #/ sqrt(img_fea.shape[1] * tag_fea.shape[1])
-    print 'converge_threshol:', converge_threshold
+    #print 'converge_threshol:', converge_threshold
 
-    print 'begin to calculate loss func'
+    #print 'begin to calculate loss func'
     new_loss = loss_func(img_fea, tag_fea, H_img, H_tag, R_pq, R_p, R_q, W, S, alpha, beta, gamma1, gamma2, gamma3)
     old_loss = new_loss + 20  # just for start
 
@@ -27,19 +27,19 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_
     W = W.transpose()
     R_pq = R_pq.transpose()
 
-    print '---------Training---------------'
+    #print '---------Training---------------'
 
     iteration = 0
 
-    while (old_loss - new_loss > converge_threshold)and (iteration < 100):
+    while (old_loss - new_loss > converge_threshold) and (iteration < 200):
 
         iteration += 1
 
-        print '-------------------------------'
-        print iteration, 'times iteration'
+        #print '-------------------------------'
+        #print iteration, 'times iteration'
 
         old_loss = new_loss
-        print old_loss
+        #print old_loss
 
         #update the hash code
         #and update the statistics S
@@ -58,7 +58,7 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_
 
         new_loss = loss_func(img_fea, tag_fea, H[0], H[1], R_pq.transpose(), R_p.transpose(), R_q.transpose(), W.transpose(), S, alpha, beta, gamma1, gamma2, gamma3)
 
-    print 'old:', old_loss, 'new', new_loss
+    #print 'old:', old_loss, 'new', new_loss
 
     H_img = sign(H[0])
     H_tag = sign(H[1])
