@@ -64,7 +64,7 @@ def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3,
             Gradient[k, i] += gamma1 * gd_1[k, i] + gamma2 * gd_2[k, i] + gamma3 * gd_3[k, i]
             Gradient[k, i] += beta * gd
 
-        H[p][k, :] = H[p][k, :] - lambda_h * Gradient[k, :] / (mq * mp * (rq + rp))
+        H[p][k, :] = H[p][k, :] - lambda_h * Gradient[k, :] / (mq * mp * (rp + rq))# * (alpha + beta + gamma1 + gamma2 + gamma3))
 
         if not OutofSample:
             S[p] = update_S(fea[p], H[p])
@@ -93,7 +93,7 @@ def update_w(H, R_pq, W, p, lambda_reg, lambda_w):
         gd = dot(H[p], gd_i.transpose())
         gd += 2 * lambda_reg * W[:, k]
 
-        W[:, k] = W[:, k] - lambda_w * gd / (mp * mq + (rp + rq))
+        W[:, k] = W[:, k] - lambda_w * gd / (mp * mq * (rp + rq)) #* (alpha + beta + gamma1 + gamma2 + gamma3))
 
     return W
 

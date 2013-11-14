@@ -10,8 +10,49 @@ from numpy import *
 from HamDist import *
 import pylab as pl
 
-def test(img_hash, qa_hash, groundtruth):
+def MAP(dist, gd):
+    #Calculate the the mean average percision
+    ap = 0
 
+    for p in range(2):
+
+        api = zeros((dist.shape[p], 1), dtype='float')
+        for i in range(dist.shape[p]):
+            if p == 0:
+                rank_i = dist[i, :]
+                gd_i = gd[i, :]
+            else:
+                rank_i = dist[:, i]
+                gd_i = gd[:, i]
+            #print p
+            #print i
+            #print rank_i.shape
+            #print rank_i
+            #print range(len(dist[i]))
+            ind = lexsort((range(len(rank_i)), rank_i))
+            rank_i = rank_i[ind]
+            gd_i = (gd_i)[ind]
+            pos_sum = 0
+            all_sum = 0
+
+            for j in range(len(rank_i)):
+
+                if gd_i[j] == 1:
+                    pos_sum += 1
+                    all_sum += 1
+                    api[i] += float(pos_sum) / all_sum
+                else:
+                    all_sum += 1
+
+            api[i] /= all_sum
+        ap += api.sum() / dist.shape[p]
+
+    #print ap
+    ap /= 2
+    return ap
+
+
+def test(img_hash, qa_hash, groundtruth, output):
 
     print '-----------------------------------------------'
     dist = zeros((img_hash.shape[1],qa_hash.shape[1]))
@@ -21,14 +62,16 @@ def test(img_hash, qa_hash, groundtruth):
             dist[i, j] = HamDist(img_hash[:, i], qa_hash[:, j])
 
 
-    step = 40
-    dist_threshold = linspace(dist.min() + 0.1, 1, step)
-    GP = arange(step)
-    GR = arange(step)
+    step = img_hash.shape[0]
+    dist_threshold = linspace(0, 1, step)
+    GP = arange(step, dtype ='f')
+    GR = arange(step, dtype = 'f')
 
-
+    #print dist
     i = 0
 
+    map_err = MAP(dist, groundtruth)
+    print '-----------MAP----------', map_err
     #print 'dist:', dist.shape
     #print 'gd:', groundtruth.shape
 
@@ -39,13 +82,25 @@ def test(img_hash, qa_hash, groundtruth):
         TP = sum((dist <= thre) * (groundtruth == 1))
         P = sum(groundtruth == 1)
 
+        print 'TP_FP:', TP_FP, 'TP:', TP, 'P:', P
 
-        GP[i] = (100.000000 * TP) / TP_FP
-        GR[i] = (100.000000 * TP) / P
+        if isnan(TP):
+            TP = 0
+        if isnan(TP_FP) or TP_FP == 0:
+            TP_FP = 1
 
-        print 'bit1:', img_hash.shape[0], 'bit2:', img_hash.shape[1],'GP:', GP[i], 'GR:', GR[i]
-        #print 'GP:', GP[i], 'GR:', GR[i]
+        #print TP
+        #print TP_FP
 
+        GP[i] = (100.000000 * float(TP)) / float(TP_FP)
+        GR[i] = (100.000000 * float(TP)) / float(P)
+
+        #result = 'R:%f bit1: %d, bit2: %d, GP: %f, GR: %f \n' % (thre, img_hash.shape[0], qa_hash.shape[0], GP[i], GR[i])
+        result = '(%f, %f),' % (GP[i], GR[i])
+        output.write(result)
+
+        print 'bit1: %d, bit2: %d' % (img_hash.shape[0], qa_hash.shape[0])
+        print 'GP:', GP[i], 'GR:', GR[i]
 
         i += 1
         #neg_mean = Tst_sim[dist < thre]
@@ -59,3 +114,7 @@ def test(img_hash, qa_hash, groundtruth):
         #pl.savefig(str(i) + '.jpg')
         #
         #i += 1
+
+    output.write('\n')
+
+

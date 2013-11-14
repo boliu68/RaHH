@@ -35,9 +35,15 @@ def subsampling(fea1, fea2, sim, lin, num):
 
     return fea1, fea2, sim
 
-def RaHH(bit):
+def RaHH(bit, output):
     #R is the similarity to keep the consistent with origin paper
-
+    parameter = {}
+    parameter['alpha'] = 1
+    parameter['beta'] = 0.1#heterogeneous
+    parameter['gamma1'] = 1e-3#1e-1 #regularization 1
+    parameter['gamma2'] = 1e-3#1e-1 #regularization 2
+    parameter['gamma3'] = 1e-3#1e-1 #regualariation 3
+    parameter['lambda_reg'] = 1e-2
     #Tr_sim_path = 'Data/Train/similarity.txt'
     #Tr_img_path = 'Data/Train/images_features.txt'
     #Tr_tag_path = 'Data/Train/tags_features.txt'
@@ -68,27 +74,38 @@ def RaHH(bit):
     [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim, bit)
 
     #print 'begin RaHH train'
-    [H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False, 0, 0)
+    [H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False, 0, 0, parameter)
 
     #print '---------------begin Test----------------------'
 
-    Tst_img, Tst_qa, gd = subsampling(Tst_img, Tst_qa, gd, 20, 0)
-
-    OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img, H_tag, gd, bit)
-
+    #Tst_img, Tst_qa, gd = subsampling(Tst_img, Tst_qa, gd, 20, 0)
+    print 'Tst Img:', Tst_img.shape, 'Tst_qa:', Tst_qa.shape, 'GD:', gd.shape
+    OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img, H_tag, gd, bit, output, parameter)
+    #output.close()
     #[H_img_Tst, H_qa_Tst, W_Tst, S_Tst, Rp_Tst, Rq_Tst, A_img_Tst, A_qa_Tst] = initialize(Tst_img, Tst_qa, Tst_sim)
     #[H_img_Tst, H_qa_Tst, W_Tst, S_Tst] = train(Tst_img, Tst_qa, H_img_Tst, H_qa_Tst, S, W, Tst_sim, Rp_Tst, Rq_Tst, True)
     #print '---------------Result---------------------------'
 
-
+    output.flush()
     #H_img_Tst = dot()
     #H_img_Tst = np.sign(dot(W.transpose(), H_img_Tst))
     #test(H_img_Tst, H_qa_Tst, gd)
 
 if __name__ == '__main__':
 
-    bit = [4, 8, 16, 24, 32]
+    output = open('Result.txt', 'w')
+    bit = [8, 16, 24, 32]
+    para = [10, 100, 1000]
 
     for bit1 in bit:
-        for bit2 in bit:
-            RaHH([bit1, bit2])
+        #for bit2 in bit:
+        #for alpha in para:
+        #for beta in para:
+            #print '------------------------------'
+            #print 'alpha:', alpha
+            #print 'beta:', beta
+            #print '------------------------------'
+        output.write('--------------%d, %d---------\n'%(bit1, bit1))
+        RaHH([bit1, bit1], output)
+
+    output.close()

@@ -66,6 +66,6 @@ def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta,
         theta2 += math.pow(lag.norm(S[p][1], 'fro'), 2)
         theta3 += math.pow(lag.norm(S[p][2], 'fro'), 2)
 
-    loss = (sum(J) + gamma1 * theta1 + gamma2 * theta2 + gamma3 * theta3) / (mp * mq * (rp + rq))
+    loss = (sum(J) + gamma1 * theta1 + gamma2 * theta2 + gamma3 * theta3) / (mp * mq * (rp + rq)) #* (alpha + beta + gamma1 + gamma2 + gamma3))
 
     return loss

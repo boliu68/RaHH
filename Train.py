@@ -3,18 +3,18 @@ from numpy import *
 from loss_func import *
 from update import *
 
-def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_mp, up_mq):
+def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_mp, up_mq, parameter):
     #print 'Train func begin'
 
-    alpha = 1000
-    beta = 10 #heterogeneous
-    gamma1 = 1 #regularization 1
-    gamma2 = 3e-3 #regularization 2
-    gamma3 = .3 #regualariation 3
-    lambda_w = 0.3
-    lambda_h = 0.3
-    lambda_reg = 1e-1
-    converge_threshold = 1e-4 #/ sqrt(img_fea.shape[1] * tag_fea.shape[1])
+    alpha = parameter['alpha']
+    beta = parameter['beta'] #heterogeneous
+    gamma1 = parameter['gamma1']#1e-1 #regularization 1
+    gamma2 = parameter['gamma2']#1e-1 #regularization 2
+    gamma3 = parameter['gamma3']#1e-1 #regualariation 3
+    lambda_w = 10000
+    lambda_h = 10000
+    lambda_reg = parameter['lambda_reg']
+    converge_threshold = 0 #/ sqrt(img_fea.shape[1] * tag_fea.shape[1])
     #print 'converge_threshol:', converge_threshold
 
     #print 'begin to calculate loss func'
@@ -27,20 +27,18 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_
     W = W.transpose()
     R_pq = R_pq.transpose()
 
-    #print '---------Training---------------'
+    print '---------Training---------------'
 
     iteration = 0
 
-    while (old_loss - new_loss > converge_threshold) and (iteration < 200):
+    while (old_loss - new_loss > converge_threshold) and (iteration < 70):
 
         iteration += 1
-
-        #print '-------------------------------'
-        #print iteration, 'times iteration'
+        print '-------------------------------'
+        print iteration, 'times iteration'
 
         old_loss = new_loss
-        #print old_loss
-
+        print old_loss
         #update the hash code
         #and update the statistics S
         for p in range(2):
@@ -48,11 +46,7 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_
             W = W.transpose()
             R_pq = R_pq.transpose()
 
-            #print 'Updating H'
             [H, S] = update_h(fea, H, W, S, R_pq, R_p.transpose(), R_q.transpose(), p, alpha, beta, gamma1, gamma2, gamma3, lambda_h, OutofSample, up_mp, up_mq)
-
-            #print 'updating W'
-            #update the mapping function w
             if not OutofSample:
                 W = update_w(H, R_pq, W, p, lambda_w, lambda_reg)
 

@@ -10,7 +10,7 @@ from RaHH import *
 #Given the trained statistics, transforming matrix, Hash code. And new data.
 #Efficiently train the hash code of new out of samples.
 
-def OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img_Tr, H_tag_Tr, gd, bit):
+def OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img_Tr, H_tag_Tr, gd, bit, output, parameter):
 
     #x: the new n data sample
     #img_fea: the features of images
@@ -35,15 +35,15 @@ def OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img_Tr, H_ta
 
     [H_Al_img, qa_nouse, W_nouse, S_nouse, Rp_Al_img, Rq_Al_img, A_img_nouse, A_qa_nouse] = initialize(Al_img, Tr_tag, img_sim, bit)
     H_Al_img = hstack((H_img_Tr, H_Al_img[:, mp::]))
-    [H_img_query, H_qa_Tst, W_Tst, S_Tst] = train(Al_img, Tr_tag, H_Al_img, H_tag_Tr, S, W, img_sim, Rp_Al_img, Rq_Al_img, True, mp, 0)
+    [H_img_query, H_qa_Tst, W_Tst, S_Tst] = train(Al_img, Tr_tag, H_Al_img, H_tag_Tr, S, W, img_sim, Rp_Al_img, Rq_Al_img, True, mp, 0, parameter)
     H_img_Tst = H_img_query[:, mp::]
 
     [img_nouse, H_Al_tag, W_nouse, S_nose, Rp_Al_tag, Rq_Al_tag, A_img_nouse, A_qa_nouse] = initialize(Tr_img, Al_tag, tag_sim, bit)
     H_Al_tag = hstack((H_tag_Tr, H_Al_tag[:, mq::]))
-    [H_img_nouse, H_qa_Tst, W_Tst, S_Tst] = train(Tr_img, Al_tag, H_img_Tr, H_Al_tag, S, W, tag_sim, Rp_Al_tag, Rq_Al_tag, True, 0, mq)
+    [H_img_nouse, H_qa_Tst, W_Tst, S_Tst] = train(Tr_img, Al_tag, H_img_Tr, H_Al_tag, S, W, tag_sim, Rp_Al_tag, Rq_Al_tag, True, 0, mq, parameter)
     H_qa_Tst = H_qa_Tst[:, mq::]
 
 
     #print '---------------Begin Performance Evaluation----------------'
-    H_img_mapped = dot(W.transpose(), H_img_Tst)
-    test(H_img_mapped, H_qa_Tst, gd)
+    H_img_mapped = sign(dot(W.transpose(), H_img_Tst))
+    test(H_img_mapped, H_qa_Tst, gd, output)
