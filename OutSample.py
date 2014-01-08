@@ -2,6 +2,7 @@ from numpy import *
 from cvh import *
 from loss_func import *
 from RaHH import *
+import time
 #Author: Bo Liu, bliuab@cse.ust.hk
 #Date: 2013.11.8
 #References:
@@ -22,6 +23,9 @@ def OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img_Tr, H_ta
     #Rpq: exist heterogeneous similarity to build a new heterogeneous similarity
 
     #Initialize hash based on CVH
+    test_start = time.clock()
+    print 'test_start:', test_start
+
     mp = Tr_img.shape[1]
     mq = Tr_tag.shape[1]
     #rp = Tr_img.shape[0]
@@ -38,12 +42,19 @@ def OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img_Tr, H_ta
     [H_img_query, H_qa_Tst, W_Tst, S_Tst] = train(Al_img, Tr_tag, H_Al_img, H_tag_Tr, S, W, img_sim, Rp_Al_img, Rq_Al_img, True, mp, 0, parameter)
     H_img_Tst = H_img_query[:, mp::]
 
+    train_img = time.clock()
+    train_img_time = float(train_img) - float(test_start)
+
     [img_nouse, H_Al_tag, W_nouse, S_nose, Rp_Al_tag, Rq_Al_tag, A_img_nouse, A_qa_nouse] = initialize(Tr_img, Al_tag, tag_sim, bit)
     H_Al_tag = hstack((H_tag_Tr, H_Al_tag[:, mq::]))
+
     [H_img_nouse, H_qa_Tst, W_Tst, S_Tst] = train(Tr_img, Al_tag, H_img_Tr, H_Al_tag, S, W, tag_sim, Rp_Al_tag, Rq_Al_tag, True, 0, mq, parameter)
     H_qa_Tst = H_qa_Tst[:, mq::]
 
+    train_qa_time = float(time.clock()) - float(train_img)
 
     #print '---------------Begin Performance Evaluation----------------'
     H_img_mapped = sign(dot(W.transpose(), H_img_Tst))
-    test(H_img_mapped, H_qa_Tst, gd, output)
+    GP, GR = test(H_img_mapped, H_qa_Tst, gd, output)
+
+    return [train_img_time, train_qa_time, GP, GR]

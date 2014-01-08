@@ -55,7 +55,7 @@ def MAP(dist, gd):
 def test(img_hash, qa_hash, groundtruth, output):
 
     print '-----------------------------------------------'
-    dist = zeros((img_hash.shape[1],qa_hash.shape[1]))
+    dist = zeros((img_hash.shape[1], qa_hash.shape[1]))
     for i in range(img_hash.shape[1]):
         for j in range(qa_hash.shape[1]):
             #print i,j,HamDist(img_hash[:,i],qa_hash[:,j])
@@ -70,8 +70,8 @@ def test(img_hash, qa_hash, groundtruth, output):
     #print dist
     i = 0
 
-    map_err = MAP(dist, groundtruth)
-    print '-----------MAP----------', map_err
+    #map_err = MAP(dist, groundtruth)
+    #print '-----------MAP----------', map_err
     #print 'dist:', dist.shape
     #print 'gd:', groundtruth.shape
 
@@ -82,7 +82,7 @@ def test(img_hash, qa_hash, groundtruth, output):
         TP = sum((dist <= thre) * (groundtruth == 1))
         P = sum(groundtruth == 1)
 
-        print 'TP_FP:', TP_FP, 'TP:', TP, 'P:', P
+        #print 'TP_FP:', TP_FP, 'TP:', TP, 'P:', P
 
         if isnan(TP):
             TP = 0
@@ -97,10 +97,10 @@ def test(img_hash, qa_hash, groundtruth, output):
 
         #result = 'R:%f bit1: %d, bit2: %d, GP: %f, GR: %f \n' % (thre, img_hash.shape[0], qa_hash.shape[0], GP[i], GR[i])
         result = '(%f, %f),' % (GP[i], GR[i])
-        output.write(result)
+        #output.write(result)
 
-        print 'bit1: %d, bit2: %d' % (img_hash.shape[0], qa_hash.shape[0])
-        print 'GP:', GP[i], 'GR:', GR[i]
+        #print 'bit1: %d, bit2: %d' % (img_hash.shape[0], qa_hash.shape[0])
+        #print 'GP:', GP[i], 'GR:', GR[i]
 
         i += 1
         #neg_mean = Tst_sim[dist < thre]
@@ -115,6 +115,7 @@ def test(img_hash, qa_hash, groundtruth, output):
         #
         #i += 1
 
-    output.write('\n')
+    #output.write('\n')
+    return GP, GR
 
 

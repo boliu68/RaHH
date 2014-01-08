@@ -27,18 +27,18 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_
     W = W.transpose()
     R_pq = R_pq.transpose()
 
-    print '---------Training---------------'
+    #print '---------Training---------------'
 
     iteration = 0
 
     while (old_loss - new_loss > converge_threshold) and (iteration < 70):
 
         iteration += 1
-        print '-------------------------------'
-        print iteration, 'times iteration'
+        #print '-------------------------------'
+        #print iteration, 'times iteration'
 
         old_loss = new_loss
-        print old_loss
+        #print old_loss
         #update the hash code
         #and update the statistics S
         for p in range(2):

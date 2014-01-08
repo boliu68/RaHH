@@ -6,6 +6,7 @@ from Test import *
 from OutSample import *
 from init import *
 from Train import *
+import time
 
 #Relation-aware Heterogeneous Hashing(RaHH)
 #Puesdo-Code
@@ -20,11 +21,9 @@ from Train import *
 def subsampling(fea1, fea2, sim, lin, num):
 
     if lin == 0:
-
-        fea1_ind = random.random_integers(0, fea1.shape[1] -1 , num)
+        fea1_ind = random.random_integers(0, fea1.shape[1] - 1, num)
         fea2_ind = random.random_integers(0, fea2.shape[1] - 1, num)
     else:
-
         if num == 0:
             fea1_ind = random.random_integers(0, fea1.shape[1] - 1, fea1.shape[1] / lin)
             fea2_ind = random.random_integers(0, fea2.shape[1] - 1, fea2.shape[1] / lin)
@@ -50,12 +49,12 @@ def RaHH(bit, output):
     #Tst_img_path = 'Data/Test/images_features.txt'
     #Tst_qa_path = 'Data/Test/QA_features.txt'
     #gd_path = 'Data/Test/groundtruth.txt'
-    Tr_img_path = 'Data/NUS_Wide_Processed/Training/images_features.txt'
-    Tr_tag_path = 'Data/NUS_Wide_Processed/Training/tags_features.txt'
-    Tr_sim_path = 'Data/NUS_Wide_Processed/Training/similarity.txt'
-    Tst_img_path = 'Data/NUS_Wide_Processed/Query/images_features.txt'
-    Tst_qa_path = 'Data/NUS_Wide_Processed/Test/tags_features.txt'
-    gd_path = 'Data/NUS_Wide_Processed/Query/groundtruth.txt'
+    Tr_img_path = 'Data/Subset/Training/300/images_features.txt'
+    Tr_tag_path = 'Data/Subset/Training/300/tags_features.txt'
+    Tr_sim_path = 'Data/Subset/Training/300/similarity.txt'
+    Tst_img_path = 'Data/Subset/Query/images_features.txt'
+    Tst_qa_path = 'Data/Subset/Test/tags_features.txt'
+    gd_path = 'Data/Subset/Query/groundtruth.txt'
 
     [Tr_sim, Tr_img, Tr_tag, Tst_img, Tst_qa, gd] = load_data.analysis(Tr_sim_path, Tr_img_path, Tr_tag_path, Tst_img_path, Tst_qa_path, gd_path)
     #image_fea d_p * m_p
@@ -63,28 +62,51 @@ def RaHH(bit, output):
     #similarty : m_p * m_q
     #QA_fea = d_p * m_p
     #GD = #img * #QA
-    Tr_img, Tr_tag, Tr_sim = subsampling(Tr_img, Tr_tag, Tr_sim, 0, 300)
+    #Tr_img, Tr_tag, Tr_sim = subsampling(Tr_img, Tr_tag, Tr_sim, 0, 300)
 
-    #print 'Loading Data finish'
-    #print 'Train sim:', Tr_sim.shape, 'Train Img:', Tr_img.shape, 'Tr_tag:', Tr_tag.shape
-    #print 'Tst Img:', Tst_img.shape, 'Tst_qa:', Tst_qa.shape, 'GD:', gd.shape
-    #
+
     #print '----------------CVH finish----------------------'
-
+    print time.clock()
     [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim, bit)
 
     #print 'begin RaHH train'
     [H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False, 0, 0, parameter)
 
+    train_time = float(time.clock())
+    print 'train time:', train_time
     #print '---------------begin Test----------------------'
+    train_img_time = 0
+    train_qa_time = 0
+    avg_GP = np.zeros(bit[0])
+    avg_GR = np.zeros(bit[0])
 
-    #Tst_img, Tst_qa, gd = subsampling(Tst_img, Tst_qa, gd, 20, 0)
-    print 'Tst Img:', Tst_img.shape, 'Tst_qa:', Tst_qa.shape, 'GD:', gd.shape
-    OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img, H_tag, gd, bit, output, parameter)
-    #output.close()
-    #[H_img_Tst, H_qa_Tst, W_Tst, S_Tst, Rp_Tst, Rq_Tst, A_img_Tst, A_qa_Tst] = initialize(Tst_img, Tst_qa, Tst_sim)
-    #[H_img_Tst, H_qa_Tst, W_Tst, S_Tst] = train(Tst_img, Tst_qa, H_img_Tst, H_qa_Tst, S, W, Tst_sim, Rp_Tst, Rq_Tst, True)
-    #print '---------------Result---------------------------'
+
+    for cv in range(50):
+        #Tst_img, Tst_qa, gd = subsampling(Tst_img, Tst_qa, gd, 20, 0)
+        print '---------50 CV----------------'
+        print cv
+        CV_qa = Tst_qa[:, cv * 200: (cv + 1) * 200]
+        CV_gd = gd[:, cv * 200: (cv + 1) * 200]
+        #[train_img_time, train_qa_time] = OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img, H_tag, gd, bit, output, parameter)
+        [img_time, qa_time, GP, GR] = OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, CV_qa, W, S, H_img, H_tag, CV_gd, bit, output, parameter)
+        train_img_time += img_time
+        train_qa_time += qa_time
+        avg_GP = avg_GP + GP
+        avg_GR = avg_GR + GR
+        print img_time
+        print qa_time
+        print 'GP', GP
+        print 'GR', GR
+
+    avg_GP = avg_GP / 50.0000
+    avg_GR = avg_GR / 50.0000
+    output.write('train time: %f, outsample_img time: %f, outsample_qa time: %f' % (train_time, train_img_time, train_qa_time))
+
+    print avg_GP
+    print avg_GR
+
+    for i in range(bit[0]):
+        output.write('%f, %f \n' % (avg_GP[i], avg_GR[i]))
 
     output.flush()
     #H_img_Tst = dot()
@@ -94,18 +116,18 @@ def RaHH(bit, output):
 if __name__ == '__main__':
 
     output = open('Result.txt', 'w')
-    bit = [8, 16, 24, 32]
+    bit = [4, 8, 16, 32]
     para = [10, 100, 1000]
 
     for bit1 in bit:
-        #for bit2 in bit:
+        for bit2 in bit:
         #for alpha in para:
         #for beta in para:
-            #print '------------------------------'
-            #print 'alpha:', alpha
-            #print 'beta:', beta
-            #print '------------------------------'
-        output.write('--------------%d, %d---------\n'%(bit1, bit1))
-        RaHH([bit1, bit1], output)
+        #    print '------------------------------'
+        #    print 'alpha:', alpha
+        #    print 'beta:', beta
+        #    print '------------------------------'
+            output.write('--------------%d, %d---------\n'%(bit1, bit2))
+            RaHH([bit1, bit2], output)
 
     output.close()
