@@ -11,10 +11,10 @@ def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta,
     fea = [img_fea, tag_fea]
     hash = [hash_1, hash_2]
     R = [Rp, Rq]
-    mp = shape(hash_1)[1]
-    mq = shape(hash_2)[1]
-    rp = hash_1.shape[0]
-    rq = hash_2.shape[0]
+#    mp = shape(hash_1)[1]
+#    mq = shape(hash_2)[1]
+#    rp = hash_1.shape[0]
+#    rq = hash_2.shape[0]
     J = []
     J_l = []
 
@@ -33,15 +33,17 @@ def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta,
         q = 1 - p
         rp = hash[p].shape[0]
         rq = hash[q].shape[0]
+	mp = hash[p].shape[1]
+	mq = hash[1].shape[1]
 
         #Homogeneous
         Ap = dot(fea[p].transpose(), fea[p]) #+ alpha * R[p]
         H_distance = sp.distance_matrix(hash[p].transpose(), hash[p].transpose()) ** 2
-
-        J_homo = (Ap * H_distance).sum()
+	print 'Disance:', H_distance
+        J_homo = (Ap * H_distance).sum() / (mp ** 2 * rp)
         J[p] += alpha * J_homo
 
-        #print 'J homo:', J_homo
+        print 'J homo:', alpha * J_homo
 
         #Heterogeneous
         #caused identical matrix is utlized to represent the homogeneous similarity
@@ -55,17 +57,25 @@ def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta,
 
             J_tmp = (R_pqT * hashq_k) * hashp_mapped_k
 
-            J[p] += sum(log(1 + exp(-J_tmp)))
-
-            J[p] += beta * math.pow((distance.norm(W_temp[k, :], 2)), 2)
-
-        #print 'Hetero:', J[p]
+            J[p] += sum(log(1 + exp(-J_tmp))) / (mp * mq * rq) 
+	    print 'J composition:'
+	    print 'Loss:', sum(log(1 + exp(-J_tmp))) / (mp * mq * rq)
+            J[p] += beta * math.pow((distance.norm(W_temp[k, :], 2)), 2) / rq
+	    print 'Regularization:', beta * math.pow((distance.norm(W_temp[k, :], 2)), 2) / rq
+        print 'Hetero:', J[p] - alpha * J_homo
 
         #regularization part of loss function
-        theta1 += math.pow(lag.norm((hash[p] * hash[p] - eye(shape(hash[p])[0], shape(hash[p])[1])), 'fro'), 2)
-        theta2 += math.pow(lag.norm(S[p][1], 'fro'), 2)
-        theta3 += math.pow(lag.norm(S[p][2], 'fro'), 2)
+        theta1 += math.pow(lag.norm((hash[p] * hash[p] - eye(shape(hash[p])[0], shape(hash[p])[1])), 'fro'), 2) / (mp * rp)
+        theta2 += math.pow(lag.norm(S[p][1], 'fro'), 2) / (mp**2 * rp)
+        theta3 += math.pow(lag.norm(S[p][2], 'fro'), 2) / ((mp ** 2) * (rp ** 2))
 
-    loss = (sum(J) + gamma1 * theta1 + gamma2 * theta2 + gamma3 * theta3) / (mp * mq * (rp + rq)) #* (alpha + beta + gamma1 + gamma2 + gamma3))
+    loss = (sum(J) + gamma1 * theta1 + gamma2 * theta2 + gamma3 * theta3)# / (mp * mq * (rp + rq)) #* (alpha + beta + gamma1 + gamma2 + gamma3))#
+   
+    print 'Loss composition:'
+    print sum(J)
+    print gamma1 * theta1
+    print gamma2 * theta2
+    print gamma3 * theta3
+    print '----------------'
 
     return loss

@@ -37,12 +37,12 @@ def subsampling(fea1, fea2, sim, lin, num):
 def RaHH(bit, output):
     #R is the similarity to keep the consistent with origin paper
     parameter = {}
-    parameter['alpha'] = 1
-    parameter['beta'] = 0.1#heterogeneous
-    parameter['gamma1'] = 1e-3#1e-1 #regularization 1
-    parameter['gamma2'] = 1e-3#1e-1 #regularization 2
-    parameter['gamma3'] = 1e-3#1e-1 #regualariation 3
-    parameter['lambda_reg'] = 1e-2
+    parameter['alpha'] = 10
+    parameter['beta'] = 100#1#heterogeneous
+    parameter['gamma1'] = 10#1e-3#1e-1 #regularization 1
+    parameter['gamma2'] = 0#1e-3#1e-1 #regularization 2
+    parameter['gamma3'] = 3#1e-3#1e-1 #regualariation 3
+    parameter['lambda_reg'] = 30#1e-2
     #Tr_sim_path = 'Data/Train/similarity.txt'
     #Tr_img_path = 'Data/Train/images_features.txt'
     #Tr_tag_path = 'Data/Train/tags_features.txt'
@@ -72,15 +72,20 @@ def RaHH(bit, output):
     #print 'begin RaHH train'
     [H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False, 0, 0, parameter)
 
+    #Train accuracy
+    GP, GR = test(sign(dot(W.transpose(), H_img)), H_tag, Tr_sim, output)
+    print 'Train Accuracy GP', GP
+    print 'Train Accuracy GR', GR
+
     train_time = float(time.clock())
     print 'train time:', train_time
     #print '---------------begin Test----------------------'
     train_img_time = 0
     train_qa_time = 0
-    avg_GP = np.zeros(bit[0])
-    avg_GR = np.zeros(bit[0])
+    avg_GP = np.zeros(bit[1])
+    avg_GR = np.zeros(bit[1])
 
-
+    H_img_Test = []
     for cv in range(50):
         #Tst_img, Tst_qa, gd = subsampling(Tst_img, Tst_qa, gd, 20, 0)
         print '---------50 CV----------------'
@@ -88,7 +93,7 @@ def RaHH(bit, output):
         CV_qa = Tst_qa[:, cv * 200: (cv + 1) * 200]
         CV_gd = gd[:, cv * 200: (cv + 1) * 200]
         #[train_img_time, train_qa_time] = OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img, H_tag, gd, bit, output, parameter)
-        [img_time, qa_time, GP, GR] = OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, CV_qa, W, S, H_img, H_tag, CV_gd, bit, output, parameter)
+        [img_time, qa_time, GP, GR, H_img_Test] = OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, CV_qa, W, S, H_img, H_tag, CV_gd, bit, output, parameter, cv == 0, H_img_Test)
         train_img_time += img_time
         train_qa_time += qa_time
         avg_GP = avg_GP + GP
@@ -104,8 +109,8 @@ def RaHH(bit, output):
 
     print avg_GP
     print avg_GR
-
-    for i in range(bit[0]):
+    output.write('\n')
+    for i in range(bit[1]):
         output.write('%f, %f \n' % (avg_GP[i], avg_GR[i]))
 
     output.flush()
@@ -119,8 +124,8 @@ if __name__ == '__main__':
     bit = [4, 8, 16, 32]
     para = [10, 100, 1000]
 
-    for bit1 in bit:
-        for bit2 in bit:
+    for bit1 in [8]:
+        for bit2 in [8]:
         #for alpha in para:
         #for beta in para:
         #    print '------------------------------'

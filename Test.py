@@ -60,9 +60,14 @@ def test(img_hash, qa_hash, groundtruth, output):
         for j in range(qa_hash.shape[1]):
             #print i,j,HamDist(img_hash[:,i],qa_hash[:,j])
             dist[i, j] = HamDist(img_hash[:, i], qa_hash[:, j])
+	
+    print img_hash[:, 0]
+    print qa_hash[:, 0]
+    print groundtruth
 
 
     step = img_hash.shape[0]
+    print 'step', step
     dist_threshold = linspace(0, 1, step)
     GP = arange(step, dtype ='f')
     GR = arange(step, dtype = 'f')
@@ -75,6 +80,8 @@ def test(img_hash, qa_hash, groundtruth, output):
     #print 'dist:', dist.shape
     #print 'gd:', groundtruth.shape
 
+    print 'Disance:', dist
+
     for thre in dist_threshold:
     #set_printoptions(threshold='nan')
 
@@ -82,15 +89,16 @@ def test(img_hash, qa_hash, groundtruth, output):
         TP = sum((dist <= thre) * (groundtruth == 1))
         P = sum(groundtruth == 1)
 
-        #print 'TP_FP:', TP_FP, 'TP:', TP, 'P:', P
+        print 'TP_FP:', TP_FP, 'TP:', TP, 'P:', P
 
         if isnan(TP):
             TP = 0
         if isnan(TP_FP) or TP_FP == 0:
             TP_FP = 1
 
-        #print TP
-        #print TP_FP
+	print '--------Thre------', thre
+        print TP
+        print TP_FP
 
         GP[i] = (100.000000 * float(TP)) / float(TP_FP)
         GR[i] = (100.000000 * float(TP)) / float(P)

@@ -49,7 +49,6 @@ def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3,
             update_range = range(mp)
 
     for k in range(rp):
-        #print 'Update H:', k
 
         for i in update_range:
             gd = 0
@@ -61,14 +60,15 @@ def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3,
             gd += sum((-R_pqij * H_qgj * W_pqkg) / (1 + exp(R_pqij * H_qgj * Wg_Hip)))
             gd += sum((-R_pq[i, :] * Hp_map[k, :]) / (1 + exp(R_pq[i, :] * Hp_map[k, :] * H[p][k, i])))
 
-            Gradient[k, i] += gamma1 * gd_1[k, i] + gamma2 * gd_2[k, i] + gamma3 * gd_3[k, i]
-            Gradient[k, i] += beta * gd
+            Gradient[k, i] += gamma1 * gd_1[k, i] + gamma2 * gd_2[k, i] / (mp) + gamma3 * gd_3[k, i] / (mp * rp)
+            Gradient[k, i] += beta * gd / (mq * rq)
 
-        H[p][k, :] = H[p][k, :] - lambda_h * Gradient[k, :] / (mq * mp * (rp + rq))# * (alpha + beta + gamma1 + gamma2 + gamma3))
+        H[p][k, :] = H[p][k, :] - lambda_h * Gradient[k, :] #/ (mq * mp * (rp + rq))# * (alpha + beta + gamma1 + gamma2 + gamma3))
 
         if not OutofSample:
             S[p] = update_S(fea[p], H[p])
 
+#    print 'Gradient', Gradient[:, 0]
     return [H, S]
 
 
@@ -90,10 +90,10 @@ def update_w(H, R_pq, W, p, lambda_reg, lambda_w):
 
         gd_i = (-Rpq_Hkj) / (1 + exp(Rpq_Hkj * tile(Hq_maped[k, :], (mq, 1)).transpose()))
         gd_i = sum(gd_i, 1)
-        gd = dot(H[p], gd_i.transpose())
+        gd = dot(H[p], gd_i.transpose()) / (mp * mq)
         gd += 2 * lambda_reg * W[:, k]
 
-        W[:, k] = W[:, k] - lambda_w * gd / (mp * mq * (rp + rq)) #* (alpha + beta + gamma1 + gamma2 + gamma3))
+        W[:, k] = W[:, k] - lambda_w * gd #/ (mp * mq * (rp + rq)) #* (alpha + beta + gamma1 + gamma2 + gamma3))
 
     return W
 
