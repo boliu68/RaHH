@@ -39,7 +39,7 @@ def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta,
         H_distance = sp.distance_matrix(hash[p].transpose(), hash[p].transpose()) ** 2
 
         J_homo = (Ap * H_distance).sum()
-        J[p] += alpha * J_homo
+        J[p] += alpha * J_homo / 2
 
         #print 'J homo:', J_homo
 

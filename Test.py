@@ -63,6 +63,7 @@ def test(img_hash, qa_hash, groundtruth, output):
 
 
     step = img_hash.shape[0]
+    print 'step', step
     dist_threshold = linspace(0, 1, step)
     GP = arange(step, dtype ='f')
     GR = arange(step, dtype = 'f')
@@ -82,7 +83,7 @@ def test(img_hash, qa_hash, groundtruth, output):
         TP = sum((dist <= thre) * (groundtruth == 1))
         P = sum(groundtruth == 1)
 
-        #print 'TP_FP:', TP_FP, 'TP:', TP, 'P:', P
+	print 'thre:', thre, 'TP_FP:', TP_FP, 'TP:', TP, 'P:', P
 
         if isnan(TP):
             TP = 0
@@ -114,7 +115,9 @@ def test(img_hash, qa_hash, groundtruth, output):
         #pl.savefig(str(i) + '.jpg')
         #
         #i += 1
-
+    
+    print 'GP:', GP
+    print 'GR:', GR
     #output.write('\n')
     return GP, GR
 
