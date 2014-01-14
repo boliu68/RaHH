@@ -5,7 +5,7 @@ import scipy.spatial as sp
 import math
 
 
-def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta, gamma1, gamma2, gamma3):
+def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta, gamma1, gamma2, gamma3, lambda_reg):
     #concerned about the fact that the homogeneous similarly matrix is identical matrix
 
     fea = [img_fea, tag_fea]
@@ -26,6 +26,8 @@ def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta,
 
     W_temp = W
 
+    print '--------Loss begin---------'
+
     for p in range(2):
         J.append(0)
         J_l.append(0)
@@ -37,12 +39,13 @@ def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta,
 	mq = hash[1].shape[1]
 
         #Homogeneous
-        Ap = dot(fea[p].transpose(), fea[p]) #+ alpha * R[p]
+        Ap = dot(fea[p].transpose(), fea[p])# + R[p]
+	Ap = (Ap - Ap.min()) / (Ap.max() - Ap.min()) + R[p]
         H_distance = sp.distance_matrix(hash[p].transpose(), hash[p].transpose()) ** 2
-	print 'Disance:', H_distance
-        J_homo = (Ap * H_distance).sum() / (mp ** 2 * rp)
+        J_homo = (Ap * H_distance).sum() / ((mp ** 2) * rp)
         J[p] += alpha * J_homo
 
+	print 'homo similarity', Ap
         print 'J homo:', alpha * J_homo
 
         #Heterogeneous
@@ -57,11 +60,12 @@ def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta,
 
             J_tmp = (R_pqT * hashq_k) * hashp_mapped_k
 
-            J[p] += sum(log(1 + exp(-J_tmp))) / (mp * mq * rq) 
-	    print 'J composition:'
-	    print 'Loss:', sum(log(1 + exp(-J_tmp))) / (mp * mq * rq)
-            J[p] += beta * math.pow((distance.norm(W_temp[k, :], 2)), 2) / rq
-	    print 'Regularization:', beta * math.pow((distance.norm(W_temp[k, :], 2)), 2) / rq
+            J[p] += beta * sum(log(1 + exp(-J_tmp))) / (mp * mq * rq) 
+	    #print 'J composition:'
+	    print 'Loss:', beta * sum(log(1 + exp(-J_tmp))) / (mp * mq * rq)
+            #J[p] += beta * math.pow((distance.norm(W_temp[k, :], 2)), 2) / rq
+            J[p] += beta * lambda_reg * math.pow((distance.norm(W_temp[k, :], 2)), 2)
+	    print 'Regularization:', beta * lambda_reg * math.pow((distance.norm(W_temp[k, :], 2)), 2)
         print 'Hetero:', J[p] - alpha * J_homo
 
         #regularization part of loss function

@@ -28,14 +28,20 @@ def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3,
     #Gradient = Gradient + gamma1 * gd_1 + gamma2 * gd_2 + gamma3 * gd_3
 
     #Homogeneous
-    Ap = dot(fea[p].transpose(), fea[p])
+    Ap = dot(fea[p].transpose(), fea[p]) #+ R[p]
+    Ap = (Ap - Ap.min()) / (Ap.max() - Ap.min()) + R[p]
     ap_1 = dot(Ap, ones((mp, 1)))
     ap_1.shape = [mp, ]
     ap_diag = diag(ap_1)
 
     gd_homo = dot(H[p], ap_diag)
     gd_homo = gd_homo - dot(dot(H[p], fea[p].transpose()), fea[p])# - alpha * dot(H[p], R[p])
-    Gradient += alpha * gd_homo
+    Gradient += alpha * gd_homo / mp
+
+    print 'Gradient composition'
+    print '--------------------'
+    print 'Homo:', alpha * gd_homo[0,0] / mp
+    
 
     Hq_map = dot(W.transpose(), H[p]) #hash code of q acquired from mapping Hp
     Hp_map = dot(W, H[q]) #hash code of p acquired from mapping Hq
@@ -67,8 +73,15 @@ def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3,
 
         if not OutofSample:
             S[p] = update_S(fea[p], H[p])
+ 
 
-#    print 'Gradient', Gradient[:, 0]
+    print 'GD1:', gamma1 * gd_1[0, 0]
+    print 'GD2:', gamma2 * gd_2[0, 0] / mp
+    print 'GD3:', gamma3 * gd_3[0, 0] / (mp * rp)
+    print 'Heteo:', Gradient[0, 0]
+
+    print '--------------------'
+
     return [H, S]
 
 

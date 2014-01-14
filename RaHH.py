@@ -37,12 +37,16 @@ def subsampling(fea1, fea2, sim, lin, num):
 def RaHH(bit, output):
     #R is the similarity to keep the consistent with origin paper
     parameter = {}
-    parameter['alpha'] = 10
+    parameter['alpha'] = 1
     parameter['beta'] = 100#1#heterogeneous
     parameter['gamma1'] = 10#1e-3#1e-1 #regularization 1
-    parameter['gamma2'] = 0#1e-3#1e-1 #regularization 2
+    parameter['gamma2'] = 0.003#1e-3#1e-1 #regularization 2
     parameter['gamma3'] = 3#1e-3#1e-1 #regualariation 3
-    parameter['lambda_reg'] = 30#1e-2
+    parameter['lambda_reg'] = 0.1#1e-2
+    #learning rate
+    parameter['lambda_w'] = 0.1
+    parameter['lambda_h'] = 0.01
+
     #Tr_sim_path = 'Data/Train/similarity.txt'
     #Tr_img_path = 'Data/Train/images_features.txt'
     #Tr_tag_path = 'Data/Train/tags_features.txt'
@@ -69,6 +73,13 @@ def RaHH(bit, output):
     print time.clock()
     [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim, bit)
 
+    GP, GR = test(H_img, H_tag, Tr_sim, output)
+
+    print 'CVH initialization'
+    print 'GP:', GP
+    print 'GR:', GR
+    print '-------------------'
+
     #print 'begin RaHH train'
     [H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False, 0, 0, parameter)
 
@@ -76,6 +87,9 @@ def RaHH(bit, output):
     GP, GR = test(sign(dot(W.transpose(), H_img)), H_tag, Tr_sim, output)
     print 'Train Accuracy GP', GP
     print 'Train Accuracy GR', GR
+
+    parameter['alpha'] = 5000
+    parameter['beta'] = 0
 
     train_time = float(time.clock())
     print 'train time:', train_time
@@ -85,8 +99,10 @@ def RaHH(bit, output):
     avg_GP = np.zeros(bit[1])
     avg_GR = np.zeros(bit[1])
 
+    return
+
     H_img_Test = []
-    for cv in range(50):
+    for cv in range(1):
         #Tst_img, Tst_qa, gd = subsampling(Tst_img, Tst_qa, gd, 20, 0)
         print '---------50 CV----------------'
         print cv

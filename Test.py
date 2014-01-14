@@ -54,33 +54,24 @@ def MAP(dist, gd):
 
 def test(img_hash, qa_hash, groundtruth, output):
 
-    print '-----------------------------------------------'
     dist = zeros((img_hash.shape[1], qa_hash.shape[1]))
     for i in range(img_hash.shape[1]):
         for j in range(qa_hash.shape[1]):
             #print i,j,HamDist(img_hash[:,i],qa_hash[:,j])
             dist[i, j] = HamDist(img_hash[:, i], qa_hash[:, j])
 	
-    print img_hash[:, 0]
-    print qa_hash[:, 0]
-    print groundtruth
-
 
     step = img_hash.shape[0]
-    print 'step', step
     dist_threshold = linspace(0, 1, step)
     GP = arange(step, dtype ='f')
     GR = arange(step, dtype = 'f')
 
-    #print dist
     i = 0
 
     #map_err = MAP(dist, groundtruth)
     #print '-----------MAP----------', map_err
     #print 'dist:', dist.shape
     #print 'gd:', groundtruth.shape
-
-    print 'Disance:', dist
 
     for thre in dist_threshold:
     #set_printoptions(threshold='nan')
