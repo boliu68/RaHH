@@ -19,7 +19,7 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_
 
     #print 'begin to calculate loss func'
     new_loss = loss_func(img_fea, tag_fea, H_img, H_tag, R_pq, R_p, R_q, W, S, alpha, beta, gamma1, gamma2, gamma3, lambda_reg)
-    old_loss = new_loss + 20  # just for start
+    old_loss = new_loss + 2e2  # just for start
 
     fea = [img_fea, tag_fea]
     H = [H_img, H_tag]
@@ -32,7 +32,7 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_
     iteration = 0
 
 #    while (abs(old_loss - new_loss) > converge_threshold) and (iteration < 70):
-    while (old_loss - new_loss > 0.1):
+    while ((old_loss - new_loss) > 1e2):
         iteration += 1
 	print 'old loss', old_loss
 	#print 'H', H_img

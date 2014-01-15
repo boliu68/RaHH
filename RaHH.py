@@ -39,13 +39,13 @@ def RaHH(bit, output):
     parameter = {}
     parameter['alpha'] = 1
     parameter['beta'] = 100#1#heterogeneous
-    parameter['gamma1'] = 10#1e-3#1e-1 #regularization 1
-    parameter['gamma2'] = 0.03#1e-3#1e-1 #regularization 2
-    parameter['gamma3'] = 1#1e-3#1e-1 #regualariation 3
-    parameter['lambda_reg'] = 0.01#1e-2
+    parameter['gamma1'] = 1#1e-3#1e-1 #regularization 1
+    parameter['gamma2'] = 0.003#1e-3#1e-1 #regularization 2
+    parameter['gamma3'] = 3#1e-3#1e-1 #regualariation 3
+    parameter['lambda_reg'] = 0.1#1e-2
     #learning rate
-    parameter['lambda_w'] = 0.1
-    parameter['lambda_h'] = 0.01
+    parameter['lambda_w'] = 0.1#0.1#0.1
+    parameter['lambda_h'] = 0.05#0.01
 
     #Tr_sim_path = 'Data/Train/similarity.txt'
     #Tr_img_path = 'Data/Train/images_features.txt'
@@ -68,18 +68,17 @@ def RaHH(bit, output):
     #GD = #img * #QA
     #Tr_img, Tr_tag, Tr_sim = subsampling(Tr_img, Tr_tag, Tr_sim, 0, 300)
 
-
     #print '----------------CVH finish----------------------'
     print time.clock()
     [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim, bit)
 
-    GP, GR = test(H_img, H_tag, Tr_sim, output)
-
+    GP, GR = test(sign(dot(W.transpose(), H_img)), H_tag, Tr_sim, output)
+    
     print 'CVH initialization'
     print 'GP:', GP
     print 'GR:', GR
     print '-------------------'
-
+    
     #print 'begin RaHH train'
     [H_img, H_tag, W, S] = train(Tr_img, Tr_tag, H_img, H_tag, S, W, Tr_sim, R_p, R_q, False, 0, 0, parameter)
 

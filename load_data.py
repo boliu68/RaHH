@@ -2,11 +2,19 @@
 #Author: Bo Liu
 #Date: 2013.10.15
 import numpy as np
+import scipy.spatial as sp
 import os
 
-def normalize(fea):
+def  normalize(fea):
 
-    return (fea-fea.min()) / (fea.max() - fea.min())
+    #return (fea-fea.min()) / (fea.max() - fea.min())
+    #print 'Shape-------------------------\n', fea.shape
+
+    for i in range(fea.shape[0]):
+
+	    fea[i, :] = fea[i, :] / sp.distance.norm(fea[i, :], 2)
+
+    return fea
 
 def analysis(Tr_sim, Tr_fea1, Tr_fea2, Tst_fea1, Tst_fea2, GD_Path):
     #num_img_fea = 500

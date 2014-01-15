@@ -20,29 +20,29 @@ def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3,
     #The derivative
     Gradient = zeros([rp, mp])
 
-    gd_1 = 4 * ((H[p] * H[p] - eye(rp, mp)) * H[p])
+    gd_1 = 4 * ((H[p] * H[p] - ones((rp, mp))) * H[p])
     gd_2 = multiply(2, S[p][1]) #rp \times 1
-    gd_2 = tile(gd_2, (1, mp))
-    gd_3 = multiply(4, dot(S[p][2], H[p]))
+    gd_2 = tile(gd_2, (1, mp)) / mp
+    gd_3 = 4 * dot(S[p][2], H[p]) / (mp * rp) #Test to be correct
 
     #Gradient = Gradient + gamma1 * gd_1 + gamma2 * gd_2 + gamma3 * gd_3
 
     #Homogeneous
-    Ap = dot(fea[p].transpose(), fea[p]) #+ R[p]
-    Ap = (Ap - Ap.min()) / (Ap.max() - Ap.min()) + R[p]
+    #The homogeneous part is experimental prove that the same with loop methods.
+    Ap = dot(fea[p].transpose(), fea[p]) + alpha * R[p]
     ap_1 = dot(Ap, ones((mp, 1)))
     ap_1.shape = [mp, ]
     ap_diag = diag(ap_1)
 
     gd_homo = dot(H[p], ap_diag)
-    gd_homo = gd_homo - dot(dot(H[p], fea[p].transpose()), fea[p])# - alpha * dot(H[p], R[p])
-    Gradient += alpha * gd_homo / mp
+    gd_homo = dot(H[p], ap_diag) - dot(S[p][0], fea[p]) -  alpha * dot(H[p], R[p])
+    Gradient += gd_homo / mp
+
 
     print 'Gradient composition'
     print '--------------------'
-    print 'Homo:', alpha * gd_homo[0,0] / mp
+    print 'Homo:', gd_homo[0,0] / mp
     
-
     Hq_map = dot(W.transpose(), H[p]) #hash code of q acquired from mapping Hp
     Hp_map = dot(W, H[q]) #hash code of p acquired from mapping Hq
 
@@ -53,6 +53,8 @@ def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3,
             update_range = []
         else:
             update_range = range(mp)
+
+    Gradient = gamma1 * gd_1 + gamma2 * gd_2 + gamma3 * gd_3
 
     for k in range(rp):
 
@@ -66,19 +68,18 @@ def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3,
             gd += sum((-R_pqij * H_qgj * W_pqkg) / (1 + exp(R_pqij * H_qgj * Wg_Hip)))
             gd += sum((-R_pq[i, :] * Hp_map[k, :]) / (1 + exp(R_pq[i, :] * Hp_map[k, :] * H[p][k, i])))
 
-            Gradient[k, i] += gamma1 * gd_1[k, i] + gamma2 * gd_2[k, i] / (mp) + gamma3 * gd_3[k, i] / (mp * rp)
+#            Gradient[k, i] += gamma1 * gd_1[k, i] + gamma2 * gd_2[k, i] + gamma3 * gd_3[k, i]
             Gradient[k, i] += beta * gd / (mq * rq)
 
-        H[p][k, :] = H[p][k, :] - lambda_h * Gradient[k, :] #/ (mq * mp * (rp + rq))# * (alpha + beta + gamma1 + gamma2 + gamma3))
+            H[p][k, i] = H[p][k, i] - lambda_h * Gradient[k, i] #/ (mq * mp * (rp + rq))# * (alpha + beta + gamma1 + gamma2 + gamma3))
 
         if not OutofSample:
             S[p] = update_S(fea[p], H[p])
- 
-
     print 'GD1:', gamma1 * gd_1[0, 0]
     print 'GD2:', gamma2 * gd_2[0, 0] / mp
     print 'GD3:', gamma3 * gd_3[0, 0] / (mp * rp)
-    print 'Heteo:', Gradient[0, 0]
+    print 'Heteo:', Gradient
+    print H[0]
 
     print '--------------------'
 
