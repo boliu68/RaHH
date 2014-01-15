@@ -42,7 +42,7 @@ def RaHH(bit, output):
     parameter['gamma1'] = 10#1e-3#1e-1 #regularization 1
     parameter['gamma2'] = 0.03#1e-3#1e-1 #regularization 2
     parameter['gamma3'] = 1#1e-3#1e-1 #regualariation 3
-    parameter['lambda_reg'] = 1#1e-2
+    parameter['lambda_reg'] = 0.01#1e-2
     #learning rate
     parameter['lambda_w'] = 0.1
     parameter['lambda_h'] = 0.01
@@ -88,7 +88,6 @@ def RaHH(bit, output):
     print 'Train Accuracy GP', GP
     print 'Train Accuracy GR', GR
 
-
     return
 
     parameter['alpha'] = 5000
@@ -102,7 +101,6 @@ def RaHH(bit, output):
     avg_GP = np.zeros(bit[1])
     avg_GR = np.zeros(bit[1])
 
-    return
 
     H_img_Test = []
     for cv in range(1):
