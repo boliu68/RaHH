@@ -40,9 +40,9 @@ def RaHH(bit, output):
     parameter['alpha'] = 1
     parameter['beta'] = 100#1#heterogeneous
     parameter['gamma1'] = 10#1e-3#1e-1 #regularization 1
-    parameter['gamma2'] = 0.003#1e-3#1e-1 #regularization 2
-    parameter['gamma3'] = 3#1e-3#1e-1 #regualariation 3
-    parameter['lambda_reg'] = 0.1#1e-2
+    parameter['gamma2'] = 0.03#1e-3#1e-1 #regularization 2
+    parameter['gamma3'] = 1#1e-3#1e-1 #regualariation 3
+    parameter['lambda_reg'] = 1#1e-2
     #learning rate
     parameter['lambda_w'] = 0.1
     parameter['lambda_h'] = 0.01
@@ -87,6 +87,9 @@ def RaHH(bit, output):
     GP, GR = test(sign(dot(W.transpose(), H_img)), H_tag, Tr_sim, output)
     print 'Train Accuracy GP', GP
     print 'Train Accuracy GR', GR
+
+
+    return
 
     parameter['alpha'] = 5000
     parameter['beta'] = 0
