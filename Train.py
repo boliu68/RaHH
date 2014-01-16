@@ -14,12 +14,12 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_
     lambda_w = parameter['lambda_w']#5000
     lambda_h = parameter['lambda_h']#10000
     lambda_reg = parameter['lambda_reg']
-    converge_threshold = 1e-8 #/ sqrt(img_fea.shape[1] * tag_fea.shape[1])
-    #print 'converge_threshol:', converge_threshold
+    lambda_alpha = parameter['lambda_alpha']
 
     #print 'begin to calculate loss func'
-    new_loss = loss_func(img_fea, tag_fea, H_img, H_tag, R_pq, R_p, R_q, W, S, alpha, beta, gamma1, gamma2, gamma3, lambda_reg)
-    old_loss = new_loss + 2e2  # just for start
+    new_loss = loss_func(img_fea, tag_fea, H_img, H_tag, R_pq, R_p, R_q, W, S, alpha, beta, gamma1, gamma2, gamma3, lambda_reg, lambda_alpha)
+    threshold = 1000#new_loss / 1000
+    old_loss = new_loss + 2 * threshold # just for start
 
     fea = [img_fea, tag_fea]
     H = [H_img, H_tag]
@@ -32,7 +32,7 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_
     iteration = 0
 
 #    while (abs(old_loss - new_loss) > converge_threshold) and (iteration < 70):
-    while ((old_loss - new_loss) > 1e2):
+    while ((old_loss - new_loss) > threshold):
         iteration += 1
 	print 'old loss', old_loss
 	#print 'H', H_img
@@ -45,11 +45,11 @@ def train(img_fea, tag_fea, H_img, H_tag, S, W, R_pq, R_p, R_q, OutofSample, up_
             W = W.transpose()
             R_pq = R_pq.transpose()
 
-            [H, S] = update_h(fea, H, W, S, R_pq, R_p.transpose(), R_q.transpose(), p, alpha, beta, gamma1, gamma2, gamma3, lambda_h, OutofSample, up_mp, up_mq)
+            [H, S] = update_h(fea, H, W, S, R_pq, R_p.transpose(), R_q.transpose(), p, alpha, beta, gamma1, gamma2, gamma3, lambda_h, lambda_alpha, OutofSample, up_mp, up_mq)
             if not OutofSample:
                 W = update_w(H, R_pq, W, p, lambda_w, lambda_reg)
 
-        new_loss = loss_func(img_fea, tag_fea, H[0], H[1], R_pq.transpose(), R_p.transpose(), R_q.transpose(), W.transpose(), S, alpha, beta, gamma1, gamma2, gamma3, lambda_reg)
+        new_loss = loss_func(img_fea, tag_fea, H[0], H[1], R_pq.transpose(), R_p.transpose(), R_q.transpose(), W.transpose(), S, alpha, beta, gamma1, gamma2, gamma3, lambda_reg, lambda_alpha)
     
     print '-----------------Finish-------------'
     print 'old:', old_loss, 'new', new_loss

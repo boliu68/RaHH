@@ -5,7 +5,7 @@ import scipy.spatial as sp
 import math
 
 
-def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta, gamma1, gamma2, gamma3, lambda_reg):
+def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta, gamma1, gamma2, gamma3, lambda_reg, lambda_alpha):
     #concerned about the fact that the homogeneous similarly matrix is identical matrix
 
     fea = [img_fea, tag_fea]
@@ -39,13 +39,19 @@ def loss_func(img_fea, tag_fea, hash_1, hash_2, R_pq, Rp, Rq, W, S, alpha, beta,
 	mq = hash[q].shape[1]
 
         #Homogeneous
+
         Ap = dot(fea[p].transpose(), fea[p]) + alpha * R[p]
-	#Ap = (Ap - Ap.min()) / (Ap.max() - Ap.min()) + R[p]
+	print 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+	print Ap
+	print Ap.shape
+
+	return
+
         H_distance = sp.distance_matrix(hash[p].transpose(), hash[p].transpose()) ** 2
         J_homo = (Ap * H_distance).sum()# / (mp * mp)
-        J[p] += J_homo
+        J[p] += J_homo * lambda_alpha
 
-        print 'J homo:', J_homo
+        print 'J homo:', J_homo * lambda_alpha
 
         #Heterogeneous
         #caused identical matrix is utlized to represent the homogeneous similarity

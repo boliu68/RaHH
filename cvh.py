@@ -18,7 +18,7 @@ def domain2view(fea_1, fea_2, similarity):
     #the image and tag whose similarity is greater than 
     #threshold is chosen as the different view for each (concept)
     #After transforming,the I is used to represent
-    threshold = 0.001
+    threshold = 0#0.001
     indicator = similarity > threshold #For choosing the pair that will be used
 
     dim= [np.size(fea_1, 0), np.size(fea_2, 0)]
@@ -89,13 +89,16 @@ def cvh(image_tags_cross_similarity, image_features, tag_features, bit):
     
     [A_1, A_2] = hash_function(X_1, X_2)
 
-    hash_1 = np.dot(np.transpose(A_1[:, 0:bit[0]]), image_features)
-    hash_2 = np.dot(np.transpose(A_2[:, 0:bit[1]]), tag_features)
+    A_1 = A_1.transpose()
+    A_2 = A_2.transpose()
+
+    hash_1 = np.dot(A_1[0:bit[0], :], image_features)
+    hash_2 = np.dot(A_2[0:bit[1], :], tag_features)
     
     hash_1 = np.sign(hash_1)
     hash_2 = np.sign(hash_2)
 
-    return [hash_1, hash_2, A_1.transpose(), A_2.transpose()]
+    return [hash_1, hash_2, A_1, A_2]
     
 if __name__ == '__main__':
     

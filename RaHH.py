@@ -42,11 +42,12 @@ def RaHH(bit, output):
     parameter['gamma1'] = 1#1e-3#1e-1 #regularization 1
     parameter['gamma2'] = 0.003#1e-3#1e-1 #regularization 2
     parameter['gamma3'] = 3#1e-3#1e-1 #regualariation 3
-    parameter['lambda_reg'] = 0.1#1e-2
+    parameter['lambda_reg'] = 0.05#1e-2
+    parameter['lambda_alpha'] = 10
     #learning rate
-    parameter['lambda_w'] = 0.1#0.1#0.1
-    parameter['lambda_h'] = 0.05#0.01
-
+    parameter['lambda_w'] = 0.01#0.01#0.1#0.1#0.1
+    parameter['lambda_h'] = 0#0.1#0.01
+   
     #Tr_sim_path = 'Data/Train/similarity.txt'
     #Tr_img_path = 'Data/Train/images_features.txt'
     #Tr_tag_path = 'Data/Train/tags_features.txt'
@@ -71,7 +72,8 @@ def RaHH(bit, output):
     #print '----------------CVH finish----------------------'
     print time.clock()
     [H_img, H_tag, W, S, R_p, R_q, A_img, A_tag] = initialize(Tr_img, Tr_tag, Tr_sim, bit)
-
+    A = {'img': A_img, 'tag':A_tag}
+    
     GP, GR = test(sign(dot(W.transpose(), H_img)), H_tag, Tr_sim, output)
     
     print 'CVH initialization'
@@ -86,14 +88,17 @@ def RaHH(bit, output):
     GP, GR = test(sign(dot(W.transpose(), H_img)), H_tag, Tr_sim, output)
     print 'Train Accuracy GP', GP
     print 'Train Accuracy GR', GR
+	
 
     return
-
-    parameter['alpha'] = 5000
+    
     parameter['beta'] = 0
+    parameter['lambda_alpha'] = 100
+    parameter['lambda_h'] = 0.001
 
     train_time = float(time.clock())
     print 'train time:', train_time
+    
     #print '---------------begin Test----------------------'
     train_img_time = 0
     train_qa_time = 0
@@ -106,10 +111,11 @@ def RaHH(bit, output):
         #Tst_img, Tst_qa, gd = subsampling(Tst_img, Tst_qa, gd, 20, 0)
         print '---------50 CV----------------'
         print cv
-        CV_qa = Tst_qa[:, cv * 200: (cv + 1) * 200]
-        CV_gd = gd[:, cv * 200: (cv + 1) * 200]
-        #[train_img_time, train_qa_time] = OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, Tst_qa, W, S, H_img, H_tag, gd, bit, output, parameter)
-        [img_time, qa_time, GP, GR, H_img_Test] = OutSample_Test(Tr_img, Tr_tag, Tr_sim, Tst_img, CV_qa, W, S, H_img, H_tag, CV_gd, bit, output, parameter, cv == 0, H_img_Test)
+        CV_qa = Tst_qa[:, cv * 100: (cv + 1) * 100]
+	CV_gd = gd[cv * 100:(cv + 1) * 100, cv * 100: (cv + 1) * 100]
+	CV_img = Tst_img[:, cv * 100: (cv + 1) * 100]
+
+	[img_time, qa_time, GP, GR, H_img_Test] = OutSample_Test(A, Tr_img, Tr_tag, Tr_sim, CV_img, CV_qa, W, S, H_img, H_tag, CV_gd, bit, output, parameter, cv == 0, H_img_Test)
         train_img_time += img_time
         train_qa_time += qa_time
         avg_GP = avg_GP + GP

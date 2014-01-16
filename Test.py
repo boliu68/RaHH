@@ -75,7 +75,7 @@ def test(img_hash, qa_hash, groundtruth, output):
 
     for thre in dist_threshold:
     #set_printoptions(threshold='nan')
-
+	print 'Test times', thre
         TP_FP = sum(dist <= thre)
         TP = sum((dist <= thre) * (groundtruth == 1))
         P = sum(groundtruth == 1)

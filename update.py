@@ -1,8 +1,9 @@
 __author__ = 'Bo Liu'
 from numpy import *
 from loss_func import *
+import math
 
-def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3, lambda_h, OutofSample, up_mp, up_mq):
+def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3, lambda_h, lambda_alpha, OutofSample, up_mp, up_mq):
     #Does not consider the homogeneous similarity
     #Thus the part to upate the homogeneous is ignored.
 
@@ -36,25 +37,29 @@ def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3,
 
     gd_homo = dot(H[p], ap_diag)
     gd_homo = dot(H[p], ap_diag) - dot(S[p][0], fea[p]) -  alpha * dot(H[p], R[p])
-    Gradient += gd_homo / mp
+    #Gradient += gd_homo / mp
+    gd_homo = gd_homo / mp
 
 
     print 'Gradient composition'
     print '--------------------'
-    print 'Homo:', gd_homo[0,0] / mp
+    print 'Homo:', lambda_alpha * gd_homo[0,0] / mp
     
     Hq_map = dot(W.transpose(), H[p]) #hash code of q acquired from mapping Hp
     Hp_map = dot(W, H[q]) #hash code of p acquired from mapping Hq
 
     if OutofSample and up[p] != 0:
+	print 'Partial Update'
         update_range = range(up[p], mp)
+
     else:
         if OutofSample and up[p] == 0:
+	    print 'And None Update'
             update_range = []
         else:
             update_range = range(mp)
 
-    Gradient = gamma1 * gd_1 + gamma2 * gd_2 + gamma3 * gd_3
+    #Gradient = gamma1 * gd_1 + gamma2 * gd_2 + gamma3 * gd_3
 
     for k in range(rp):
 
@@ -70,7 +75,8 @@ def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3,
 
 #            Gradient[k, i] += gamma1 * gd_1[k, i] + gamma2 * gd_2[k, i] + gamma3 * gd_3[k, i]
             Gradient[k, i] += beta * gd / (mq * rq)
-
+	    Gradient[k, i] +=  lambda_alpha * gd_homo[k, i]
+	    Gradient[k, i] += gamma1 * gd_1[k, i] + gamma2 * gd_2[k, i] + gamma3 * gd_3[k, i]
             H[p][k, i] = H[p][k, i] - lambda_h * Gradient[k, i] #/ (mq * mp * (rp + rq))# * (alpha + beta + gamma1 + gamma2 + gamma3))
 
         if not OutofSample:
@@ -78,13 +84,9 @@ def update_h(fea, H, W, S, R_pq, Rp, Rq, p, alpha, beta, gamma1, gamma2, gamma3,
     print 'GD1:', gamma1 * gd_1[0, 0]
     print 'GD2:', gamma2 * gd_2[0, 0] / mp
     print 'GD3:', gamma3 * gd_3[0, 0] / (mp * rp)
-    print 'Heteo:', Gradient
-    print H[0]
-
     print '--------------------'
 
     return [H, S]
-
 
 def update_w(H, R_pq, W, p, lambda_reg, lambda_w):
     q = 1 - p
@@ -97,20 +99,30 @@ def update_w(H, R_pq, W, p, lambda_reg, lambda_w):
 
     Hq_maped = dot(W.transpose(), H[p])
 
+    #Prove to be consistent with loop methods
     for k in range(rq):
-
+	
         #mp \times 1
         Rpq_Hkj = R_pq * tile(H[q][k, :], (mp, 1))
 
         gd_i = (-Rpq_Hkj) / (1 + exp(Rpq_Hkj * tile(Hq_maped[k, :], (mq, 1)).transpose()))
         gd_i = sum(gd_i, 1)
         gd = dot(H[p], gd_i.transpose()) / (mp * mq)
+	
+	print 'W gradient Loss'
+	print gd
+
         gd += 2 * lambda_reg * W[:, k]
-
+	
+	print gd[0]
+	print W[:, k]
+	print '-------------------------'
+	
         W[:, k] = W[:, k] - lambda_w * gd #/ (mp * mq * (rp + rq)) #* (alpha + beta + gamma1 + gamma2 + gamma3))
+	
 
+    
     return W
-
 
 def update_S(fea, hash):
 

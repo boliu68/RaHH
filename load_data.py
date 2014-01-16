@@ -10,9 +10,13 @@ def  normalize(fea):
     #return (fea-fea.min()) / (fea.max() - fea.min())
     #print 'Shape-------------------------\n', fea.shape
 
-    for i in range(fea.shape[0]):
+    #for i in range(fea.shape[0]):
 
-	    fea[i, :] = fea[i, :] / sp.distance.norm(fea[i, :], 2)
+	    #fea[i, :] = fea[i, :] / sp.distance.norm(fea[i, :], 2)
+
+    for j in range(fea.shape[1]):
+
+	    fea[:, j] = fea[:, j] / sp.distance.norm(fea[:, j], 2)
 
     return fea
 
